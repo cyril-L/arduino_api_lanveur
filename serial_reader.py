@@ -41,17 +41,17 @@ class SerialReader():
         if len(line) != 11:
             return None
         try:
-            return {
-                'v1': int(line[2]),
-                'v2': int(line[3]),
-                't1': float(line[4]),
-                't2': float(line[5]),
-                't3': float(line[6]),
-                't4': float(line[7]),
-                't5': float(line[8]),
-                't6': float(line[9]),
-                't7': float(line[10])
-            }
+            return [int(line[0]),
+                    int(line[1]),
+                    int(line[2]),
+                    int(line[3]),
+                    float(line[4]),
+                    float(line[5]),
+                    float(line[6]),
+                    float(line[7]),
+                    float(line[8]),
+                    float(line[9]),
+                    float(line[10])]
         except ValueError:
             return None
 
@@ -107,16 +107,13 @@ class BackgroundSerialReader():
                              baudrate=self.serial_baudrate,
                              timeout=self.serial_timeout)
 
-def process_data(data):
-    data['stamp'] = dt.datetime.utcnow()
-    print(data)
-
 if __name__ == '__main__':
 
     import argparse
     import unittest
     import io
     import sys
+    import datetime as dt
 
     class TestSerialReader(unittest.TestCase):
 
@@ -124,17 +121,7 @@ if __name__ == '__main__':
             serial = io.BytesIO(b';    110   ;   41    ;    6478  ;  3239       ;       63.14   ;     56.12   ;     52.31   ;     46.65   ;     22.28   ;     58.77   ;     56.86   ;\r\n')
             reader = SerialReader(serial)
             data = reader.read_data_line()
-            expected = {
-                'v1': 6478,
-                'v2': 3239,
-                't1': 63.14,
-                't2': 56.12,
-                't3': 52.31,
-                't4': 46.65,
-                't5': 22.28,
-                't6': 58.77,
-                't7': 56.86
-            }
+            expected = [110, 41, 6478, 3239, 63.14, 56.12, 52.31, 46.65, 22.28, 58.77, 56.86]
             self.assertEqual(data, expected)
 
         def test_returns_none_on_invalid_data(self):
@@ -206,7 +193,9 @@ if __name__ == '__main__':
 
     if args.arduino and not args.unit_test:
         def callback(data):
-            print(data)
+            data.insert(0, dt.datetime.now())
+            data = [str(element) for element in data]
+            print(", ".join(data))
         serial_reader = BackgroundSerialReader(callback)
         serial_reader.start()
         try:
