@@ -5,7 +5,7 @@ import threading
 import time
 import serial
 
-SERIAL_PORT     = "/dev/cu.usbmodem1411301"
+SERIAL_PORT     = "/dev/ttyACM0"
 SERIAL_BAUDRATE = 9600
 SERIAL_TIMEOUT  = 2
 
@@ -26,7 +26,7 @@ class SerialReader():
             raise TimeoutError("Serial port timeout")
         data = self.parse_data_line(line)
         if data is None:
-            logging.warning(f"Unable to parse data line ({line})")
+            logging.warning("Unable to parse data line ({})".format(line))
         return data
 
     @staticmethod
@@ -36,7 +36,7 @@ class SerialReader():
             line = line.decode("utf-8")
         except UnicodeDecodeError:
             return None
-        line = line.strip(";\r\n")
+        line = line.strip("; \r\n")
         line = line.split(";")
         if len(line) != 11:
             return None
@@ -118,10 +118,10 @@ if __name__ == '__main__':
     class TestSerialReader(unittest.TestCase):
 
         def test_returns_parsed_data(self):
-            serial = io.BytesIO(b';    110   ;   41    ;    6478  ;  3239       ;       63.14   ;     56.12   ;     52.31   ;     46.65   ;     22.28   ;     58.77   ;     56.86   ;\r\n')
+            serial = io.BytesIO(b';    225   ;   84    ;    10570  ;  5285       ;       52.37   ;     47.02   ;     43.94   ;     37.66   ;     18.15   ;     48.62   ;     47.08   ;       \r\n')
             reader = SerialReader(serial)
             data = reader.read_data_line()
-            expected = [110, 41, 6478, 3239, 63.14, 56.12, 52.31, 46.65, 22.28, 58.77, 56.86]
+            expected = [225, 84, 10570, 5285, 52.37, 47.02, 43.94, 37.66, 18.15, 48.62, 47.08]
             self.assertEqual(data, expected)
 
         def test_returns_none_on_invalid_data(self):
