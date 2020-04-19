@@ -16,25 +16,28 @@ class DataProcessing():
     # Tec: température de l’eau chaude directement à la sortie du ballon
     # TODO Consommation électrique
 
+    # FIXME Pourquoi température eau froide entre 30 et 45 °C
+
     def process(self, data):
 
-        values = data[2:] # discard the first values (ticks converted to liters)
         labels = [
-            'Vecs_ticks',  # TODO lequel est Vecs?
-            'Vep_ticks',
+            'Vecs_pulses',
+            'Vecs',
+            'Vep_pulses',
+            'Vep',
             'Teh', # Haut du ballon
             'Teb', # Bas du ballon
             'Tec', # Eau chaude
             'Tef', # Eau froide
-            'T5',  # TODO Eau sortant du circuit des panneaux (code arduino) vs Température des panneaux (rapport)
-            'T6',  # TODO Entrée échangeur?
-            'T7',  # TODO Sortie échangeur?
+            'Tep', # TODO Eau sortant du circuit des panneaux (code arduino) vs Température des panneaux (rapport)
+            'Txe', # TODO Entrée échangeur?
+            'Txs', # TODO Sortie échangeur?
         ]
-        data = dict(zip(labels, values))
+        data = dict(zip(labels, data))
 
         # Handle counter resets
 
-        counted = ['Vecs_ticks', 'Vep_ticks']
+        counted = ['Vecs_pulses', 'Vep_pulses']
         have_counters_been_reset = False
 
         for label in counted:
@@ -51,10 +54,12 @@ class DataProcessing():
             data[label] = self.counters.update_and_get(label, diff)
             self.prev_ticks[label] = curr
 
-        # # TODO rapport de stage 1 tick = 0.25 litre, pas cohérent avec les valeurs dans le code
-        # 1 tick = 0.25 liter
-        data['Vecs'] = data['Vecs_ticks'] / 4
-        data['Vep'] = data['Vep_ticks']  / 4
+        # FIXME rapport de stage 1 tick = 0.250 litres
+        #       code Arduino V1  1 tick = 0.375 litres
+        #       code Arduino V2  1 tick = 0.500 litres
+
+        data['Vecs'] = data['Vecs_pulses'] * 0.25
+        data['Vep'] = data['Vep_pulses'] * 0.25
 
         return data
 
@@ -97,57 +102,57 @@ if __name__ == '__main__':
                                 52.37, 47.02, 43.94, 37.66, 18.15, 48.62, 47.08]
 
         def set_mocked_data(self, label, value):
-            if label == 'Vecs_ticks':
-                self.mocked_data[2] = value
+            if label == 'Vecs_pulses':
+                self.mocked_data[0] = value
             else:
                 raise NotImplementedError
 
         def test_label_raw_data_line(self):
             data = self.processing.process(self.mocked_data)
             expected = {
-                'Vecs_ticks': 10570,
-                'Vep_ticks':   5285,
+                'Vecs_pulses': 225,
+                'Vep_pulses': 10570,
                 'Teh': 52.37,
                 'Teb': 47.02,
                 'Tec': 43.94,
                 'Tef': 37.66,
-                'T5' : 18.15,
-                'T6' : 48.62,
-                'T7' : 47.08,
+                'Tep': 18.15,
+                'Txe': 48.62,
+                'Txs': 47.08,
             }
             for label, expected_value in expected.items():
                 self.assertEqual(data[label], expected_value)
 
         def test_increases_counters_on_first_data(self):
 
-            self.counters.reset('Vecs_ticks', 10)
-            self.set_mocked_data('Vecs_ticks', 2)
+            self.counters.reset('Vecs_pulses', 10)
+            self.set_mocked_data('Vecs_pulses', 2)
             self.processing.process(self.mocked_data)
 
-            self.assertEqual(self.counters.get('Vecs_ticks'), 10 + 2)
+            self.assertEqual(self.counters.get('Vecs_pulses'), 10 + 2)
 
         def test_replaces_raw_data_values_with_counters(self):
 
-            self.counters.reset('Vecs_ticks', 10)
-            self.set_mocked_data('Vecs_ticks', 2)
+            self.counters.reset('Vecs_pulses', 10)
+            self.set_mocked_data('Vecs_pulses', 2)
             data = self.processing.process(self.mocked_data)
 
-            self.assertEqual(data['Vecs_ticks'], 10 + 2)
+            self.assertEqual(data['Vecs_pulses'], 10 + 2)
 
         def test_assume_reset_when_any_counter_deacreases(self):
 
             # Reading ticks from 0 to 4
             for i in range(5):
-                self.set_mocked_data('Vecs_ticks', i)
+                self.set_mocked_data('Vecs_pulses', i)
                 data = self.processing.process(self.mocked_data)
 
             # 4 ticks should have been counted
-            self.assertEqual(data['Vecs_ticks'], 4)
+            self.assertEqual(data['Vecs_pulses'], 4)
 
             # If the ticks decreases, assume a reset and keep counting
-            self.set_mocked_data('Vecs_ticks', 1)
+            self.set_mocked_data('Vecs_pulses', 1)
             data = self.processing.process(self.mocked_data)
 
-            self.assertEqual(data['Vecs_ticks'], 5)
+            self.assertEqual(data['Vecs_pulses'], 5)
 
     unittest.main()
