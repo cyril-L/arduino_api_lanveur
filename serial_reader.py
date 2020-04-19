@@ -5,11 +5,7 @@ import threading
 import time
 import serial
 
-SERIAL_PORT     = "/dev/ttyACM0"
-SERIAL_BAUDRATE = 9600
-SERIAL_TIMEOUT  = 2
-
-SERIAL_RECONNECT_TIMEOUT = 5
+from config import SERIAL_DEVICE, SERIAL_BAUDRATE, FRESH_DATA_TIMEOUT_S, SERIAL_RECONNECT_TIMEOUT_S
 
 class SerialReader():
 
@@ -19,11 +15,11 @@ class SerialReader():
     def read_data_line(self):
         line = self.ioserial.readline()
         if len(line) == 0:
-            logging.error("Serial port timeout")
+            logging.error("No fresh data timeout")
             # pyserial returns an empty line on timeout,
             # Continuous data is expected in our case,
             # raise an exception to be handled at upper level
-            raise TimeoutError("Serial port timeout")
+            raise TimeoutError
         data = self.parse_data_line(line)
         if data is None:
             logging.warning("Unable to parse data line ({})".format(line))
@@ -58,9 +54,9 @@ class SerialReader():
 class BackgroundSerialReader():
 
     def __init__(self, on_data_callback,
-                 serial_device=SERIAL_PORT,
+                 serial_device=SERIAL_DEVICE,
                  serial_baudrate=SERIAL_BAUDRATE,
-                 serial_timeout=SERIAL_TIMEOUT):
+                 serial_timeout=FRESH_DATA_TIMEOUT_S):
         self.serial_device = serial_device
         self.serial_timeout = serial_timeout
         self.serial_baudrate = serial_baudrate
@@ -85,7 +81,7 @@ class BackgroundSerialReader():
                     self.data_reader_loop(arduino_serial)
             except (FileNotFoundError, serial.serialutil.SerialException) as e:
                 logging.error(e)
-                time.sleep(SERIAL_RECONNECT_TIMEOUT)
+                time.sleep(SERIAL_RECONNECT_TIMEOUT_S)
 
     def data_reader_loop(self, arduino_serial):
         reader = SerialReader(arduino_serial)
