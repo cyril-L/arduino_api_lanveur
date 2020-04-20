@@ -11,11 +11,12 @@ class SerialReader():
 
     def __init__(self, ioserial):
         self.ioserial = ioserial
+        self.ioserial.flush()
 
     def read_data_line(self):
         line = self.ioserial.readline()
         if len(line) == 0:
-            logging.error("No fresh data timeout")
+            logging.error("Serial timeout")
             # pyserial returns an empty line on timeout,
             # Continuous data is expected in our case,
             # raise an exception to be handled at upper level
@@ -51,15 +52,23 @@ class SerialReader():
         except ValueError:
             return None
 
+    def reset_arduino(self):
+        logging.warning("Reseting Arduino")
+        # Reset Arduino
+        self.ioserial.setDTR(False)
+        time.sleep(1)
+        self.ioserial.flushInput()
+        self.ioserial.setDTR(True)
+
 class BackgroundSerialReader():
 
     def __init__(self, on_data_callback,
                  serial_device=SERIAL_DEVICE,
                  serial_baudrate=SERIAL_BAUDRATE,
-                 serial_timeout=FRESH_DATA_TIMEOUT_S):
+                 fresh_data_timeout=FRESH_DATA_TIMEOUT_S):
         self.serial_device = serial_device
-        self.serial_timeout = serial_timeout
         self.serial_baudrate = serial_baudrate
+        self.fresh_data_timeout_duration = fresh_data_timeout
         self.callback = on_data_callback
         self.thread = threading.Thread(target=self.main_loop)
         self.is_interrupted = False
@@ -80,28 +89,43 @@ class BackgroundSerialReader():
                 with self.open_serial_port() as arduino_serial:
                     self.data_reader_loop(arduino_serial)
             except (FileNotFoundError, serial.serialutil.SerialException) as e:
-                logging.error(e)
+                logging.warning(e)
+                logging.warning("Retrying in {} s".format(SERIAL_RECONNECT_TIMEOUT_S))
                 time.sleep(SERIAL_RECONNECT_TIMEOUT_S)
 
     def data_reader_loop(self, arduino_serial):
         reader = SerialReader(arduino_serial)
+        self.reset_timeout()
+
         while not self.is_interrupted:
+            serial_timeout = False
             try:
                 data = reader.read_data_line()
-                if data is not None:
-                    self.callback(data)
             except TimeoutError:
-                logging.error("Reseting Arduino")
-                # Reset Arduino
-                arduino_serial.setDTR(False)
-                time.sleep(1)
-                arduino_serial.flushInput()
-                arduino_serial.setDTR(True)
+                serial_timeout = True
+
+            if serial_timeout or self.has_timedout():
+                logging.warning("No valid data received in the last {} s".format(
+                    self.fresh_data_timeout_duration))
+                reader.reset_arduino()
+                self.reset_timeout()
+            elif data is not None:
+                self.callback(data)
+                self.reset_timeout()
 
     def open_serial_port(self):
         return serial.Serial(port=self.serial_device,
                              baudrate=self.serial_baudrate,
-                             timeout=self.serial_timeout)
+                             timeout=self.fresh_data_timeout_duration)
+
+    def has_timedout(self):
+        return self.get_time() > self.fresh_data_timeout
+
+    def reset_timeout(self):
+        self.fresh_data_timeout = self.get_time() + self.fresh_data_timeout_duration
+
+    def get_time(self):
+        return time.monotonic()
 
 if __name__ == '__main__':
 

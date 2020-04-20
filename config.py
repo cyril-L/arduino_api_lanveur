@@ -6,11 +6,10 @@ SERIAL_DEVICE = "/dev/ttyACM0"
 SERIAL_BAUDRATE = 9600
 
 # Time to atempt a new connection when the previous failed
-SERIAL_RECONNECT_TIMEOUT_S = 5
+SERIAL_RECONNECT_TIMEOUT_S = 15
 
-# How often we expect data readings
-# The Arduino will be reset when this timeout expires
-FRESH_DATA_TIMEOUT_S = 2
+# The Arduino will be reset when no valid data have been received during this duration
+FRESH_DATA_TIMEOUT_S = 5
 
 # Where / how often save persistent counters
 COUNTERS_FILE_PATH = os.path.join(ROOT_DIR, "counters.json")
