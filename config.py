@@ -9,7 +9,7 @@ SERIAL_BAUDRATE = 9600
 SERIAL_RECONNECT_TIMEOUT_S = 15
 
 # The Arduino will be reset when no valid data have been received during this duration
-FRESH_DATA_TIMEOUT_S = 5
+FRESH_DATA_TIMEOUT_S = 10
 
 # Where / how often save persistent counters
 COUNTERS_FILE_PATH = os.path.join(ROOT_DIR, "counters.json")
