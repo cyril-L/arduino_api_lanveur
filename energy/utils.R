@@ -1,13 +1,27 @@
-read_data <- function(filename, reset_clock=TRUE) {
+read_data <- function(filename, reset_clock=TRUE, from_hour=NULL, to_hour=NULL) {
   df <- read.table(filename, header = TRUE, sep = ",", fill = TRUE)
   if (reset_clock) {
     df$clock <- df$clock - df$clock[1]
   }
 
-  # Swap Txs and Tep
-  # df$tmp <- df$Tep
-  # df$Tep <- df$Txs
-  # df$Txs <- df$tmp
+  if (!is.null(from_hour)) {
+    df <- df[df$clock >= from_hour * 3600, ]
+  }
+
+  if (!is.null(to_hour)) {
+    df <- df[df$clock < to_hour * 3600, ]
+  }
+
+  if (reset_clock & (!is.null(from_hour) | !is.null(to_hour))) {
+    df$clock <- df$clock - df$clock[1]
+  }
+
+  if (mean(df$Tep) < mean(df$Txs)) {
+    # Swap Txs and Tep
+    df$tmp <- df$Tep
+    df$Tep <- df$Txs
+    df$Txs <- df$tmp
+  }
 
   # Swap Txs and Txe
   # df$tmp <- df$Txe
