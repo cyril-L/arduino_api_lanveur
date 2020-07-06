@@ -22,9 +22,8 @@ class DataProcessing():
 
         labels = [
             'Vecs_pulses',
-            'Vecs',
             'Vep_pulses',
-            'Vep',
+            'Eaux_pulses',
             'Teh', # Haut du ballon
             'Teb', # Bas du ballon
             'Tec', # Eau chaude
@@ -37,7 +36,7 @@ class DataProcessing():
 
         # Handle counter resets
 
-        counted = ['Vecs_pulses', 'Vep_pulses']
+        counted = ['Vecs_pulses', 'Vep_pulses', 'Eaux_pulses']
         have_counters_been_reset = False
 
         for label in counted:
@@ -96,7 +95,7 @@ if __name__ == '__main__':
         def setUp(self):
             self.counters = PersistentCounters()
             self.processing = DataProcessing(self.counters)
-            self.mocked_data = [0, 0, 0, 0,
+            self.mocked_data = [0, 0, 0,
                                 52.37, 47.02, 43.94, 37.66, 18.15, 48.62, 47.08]
 
         def set_mocked_data(self, label, value):
@@ -110,6 +109,7 @@ if __name__ == '__main__':
             expected = {
                 'Vecs_pulses': 0,
                 'Vep_pulses': 0,
+                'Eaux_pulses': 0,
                 'Teh': 52.37,
                 'Teb': 47.02,
                 'Tec': 43.94,

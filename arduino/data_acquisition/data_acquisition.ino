@@ -2,8 +2,9 @@
 
 // Pin assignment
 
-const byte FLOWMETER_1_PIN = 2;
-const byte FLOWMETER_2_PIN = 3;
+const byte FLOW_METER_1_PIN = 2;
+const byte FLOW_METER_2_PIN = 3;
+const byte AUX_ENERGY_METER_PIN = 6;
 
 const byte ONEWIRE_BUS_1_PIN = 4;
 const byte ONEWIRE_BUS_2_PIN = 5;
@@ -33,45 +34,98 @@ DS18B20_t temp_sensors[temp_sensors_count] {
     {{0x28, 0xFF, 0x72, 0x45, 0x90, 0x15, 0x04, 0x9D}, &onewire_bus2}
 };
 
-// Flow meter pulses interrupt callbacks
+class DebouncedPluseCounter {
+public:
 
-volatile unsigned long flowmeter1_pulses = 0;
+  volatile unsigned long count;
 
-void flowmeter1_on_rising_edge()  {
-  flowmeter1_pulses++;
-}
+  DebouncedPluseCounter(int digital_pin, int debounce_duration_ms) {
+    this->digital_pin = digital_pin;
+    this->debounce_duration_ms = debounce_duration_ms;
+    count = 0;
+  }
 
-volatile unsigned long flowmeter2_pulses = 0;
+  void setup() {
+    pinMode(digital_pin, INPUT);
+    this->previous_state = digitalRead(digital_pin);
+    this->debounced_state = previous_state;
+    this->debounce_started_at = 0;
+  }
 
-void flowmeter2_on_rising_edge()  {
-  flowmeter2_pulses++ ;
+  void update(unsigned long time_ms) {
+    int state = digitalRead(digital_pin);
+    // If pin state has changed, start a timer
+    if (state != previous_state) {
+      debounce_started_at = time_ms;
+      previous_state = state;
+    // Apply the change to debounced_state if the new state is still observed
+    // after the debounce duration
+    } else if (state != debounced_state && (time_ms > debounce_started_at + debounce_duration_ms)) {
+      debounced_state = state;
+      if (state) {
+        count++;
+      }
+    }
+  }
+
+private:
+  unsigned long debounce_started_at;
+  int debounce_duration_ms;
+  int digital_pin;
+  int previous_state;
+  int debounced_state;
+};
+
+const byte debounce_duration_ms = 5;
+
+const byte pulse_counters_count = 3;
+
+DebouncedPluseCounter pulse_counters[pulse_counters_count] {
+  DebouncedPluseCounter(FLOW_METER_1_PIN, debounce_duration_ms),
+  DebouncedPluseCounter(FLOW_METER_2_PIN, debounce_duration_ms),
+  DebouncedPluseCounter(AUX_ENERGY_METER_PIN, debounce_duration_ms)
+};
+
+// Nice resource about timers
+// https://learn.adafruit.com/multi-tasking-the-arduino-part-2/timers
+
+// Interrupt is called once a millisecond
+// Counter pulse duration is about 90 ms
+
+SIGNAL(TIMER0_COMPA_vect)
+{
+  unsigned long time_ms = millis();
+  for (int i = 0; i < pulse_counters_count; ++i) {
+    pulse_counters[i].update(time_ms);
+  }
 }
 
 void setup() {
   Serial.begin (9600);
-  pinMode(FLOWMETER_1_PIN, INPUT) ;
-  attachInterrupt(digitalPinToInterrupt(FLOWMETER_1_PIN), flowmeter1_on_rising_edge, RISING);
-  pinMode(FLOWMETER_2_PIN, INPUT) ;
-  attachInterrupt(digitalPinToInterrupt(FLOWMETER_2_PIN), flowmeter2_on_rising_edge, RISING);
+  unsigned long time_ms = millis();
+  for (int i = 0; i < pulse_counters_count; ++i) {
+    pulse_counters[i].setup();
+  }
+
+  // Timer0 is already used for millis() - we'll just interrupt somewhere
+  // in the middle and call the "Compare A" function above
+  OCR0A = 0xAF;
+  TIMSK0 |= _BV(OCIE0A);
 }
 
 void loop() {
-  // TODO legacy data format
-  Serial.print(";    ");   
-  Serial.print(flowmeter1_pulses);
-  Serial.print("    ;    ");
-  Serial.print(0);
-  Serial.print("    ;    "); 
-  Serial.print(flowmeter2_pulses);
-  Serial.print("    ;    "); 
-  Serial.print(0);
+
+  for (int i = 0; i < pulse_counters_count; ++i) {
+    Serial.print(pulse_counters[i].count);
+    Serial.print(" ; ");
+  }
 
   for (int i = 0; i < temp_sensors_count; ++i) {
     float t = getTempC(&temp_sensors[i]);
-    Serial.print("    ;    ");
     Serial.print(t);
+    Serial.print(" ; ");
   }
-  Serial.println("    ;");
+  Serial.println();
 }
 
 // TODO legacy code by Tolotra Honoré
