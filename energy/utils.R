@@ -16,7 +16,7 @@ read_data <- function(filename, reset_clock=TRUE, from_hour=NULL, to_hour=NULL) 
     df$clock <- df$clock - df$clock[1]
   }
 
-  if (mean(df$Tep) < mean(df$Txs)) {
+  if (max(df$Tep) < max(df$Txs)) {
     # Swap Txs and Tep
     df$tmp <- df$Tep
     df$Tep <- df$Txs

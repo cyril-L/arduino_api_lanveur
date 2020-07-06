@@ -46,7 +46,7 @@ zabbix_items = {
 }
 
 csv_header = ['clock'] + list(zabbix_items.values())
-print(', '.join(csv_header))
+print(','.join(csv_header))
 
 def datetime_to_zabbix(date):
     return int(time.mktime(date.timetuple()))
@@ -81,4 +81,4 @@ while time_from < time_till:
     for clock, values in dataframe:
         values['clock'] = clock
         values = [str(values[name]) for name in csv_header]
-        print(', '.join(values))
+        print(','.join(values))
