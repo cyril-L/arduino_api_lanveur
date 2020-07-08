@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -7,107 +9,109 @@ pd.plotting.register_matplotlib_converters()
 
 df = pd.read_csv("2020-may-june.csv")
 
-SAMPLE_RATE = 60
+df['date'] = pd.to_datetime(df['clock'], unit='s')
+
+SAMPLE_INTERVAL = 60
 V_STORED_WATER = 0.3  # m³
 T_AMBIANT = 19  # °C
 
+# Specific heat capacity
+# amount of energy that must be added, in the form of heat, to one unit of mass of the substance in order to cause an increase of one unit in its temperature.
+# The SI unit of specific heat is joule per kelvin and kilogram, J/(K kg).
+# For example, at a temperature of 25 °C (the specific heat capacity can vary with the temperature),
+# the heat required to raise the temperature of 1 kg of water by 1 K (equivalent to 1 °C) is 4179.6 joules,
+# meaning that the specific heat of water is 4179.6 J·kg−1·K−1.[3]
 
-def summary(df):
-    print(df.head())
-    print(df.columns)
-    print(df.dtypes)
-    print(df.describe())
+cp = 4179.6 # J / kg·K
 
+# How much joules are needed to increase the temperature of 1 m³ of water by 1 °C
+
+rho = 1000 # kg / m³
+
+def degToJoules(deg):
+    return deg * cp * V_STORED_WATER * rho # K.J/K
+
+def joulesToDeg(joules):
+    return joules / (cp * V_STORED_WATER * rho) # J.K/J
+
+# modeling like
+#
+#        +---- Hot water         (Tec)
+#        |
+#   /----+----\
+#   |         |  Top water       (Teh)
+#   |        Z|  Electric Heater
+#   |         |
+#   |         |  Storage water   (t_stored)
+#   |         |
+#   |        Z|  Solar header    (in Txe, out Txs)
+#   |         |  Botom water     (Teb)
+#   \----+----/
+#   /    |    \
+#        +---- Cold water        (Tef)
+#
+# Only storage water is modeled for now
+#
+# TODO model 4 different water layers
+# https://docs.izuba.fr/v4/fr/index.php/Ballon_(Biblioth%C3%A8que)?toc-id=48
 
 def model_stored_temp(df):
     return (df['Teb'] + df['Teh']) / 2
 
-
 df['T_stored'] = model_stored_temp(df)
 
+df['energy'] = degToJoules(df['T_stored'] - df.iloc[0]['T_stored'])
+df['power'] = df['energy'].diff() / SAMPLE_INTERVAL
+# Moving average on 10 min to smooth computed power
+df['power'] = df['power'].rolling(window=60).mean()
 
-def model_flow(df, var):
-    return df[var].diff() / SAMPLE_RATE
+# Comparing with NF EN 12977-3 (not read for now)
+# UA Coefficient de pertes thermiques (ex. 1.667 W/K)
+# Us perte thermique du ballon de stockage (< 20 W / m³·K)
+# Cr constante de refroidissement par jour (ex. 0,103 Wh/l.K.j)
 
-
-df['F_solar'] = model_flow(df, 'Vep')
-df['F_hot_water'] = model_flow(df, 'Vecs')
-
+UA = 3.5
+Us = UA / V_STORED_WATER # Us
+Cr = 85400 * Us / (3600 * 1000)
 
 def model_cooling_power(temp_inside, temp_outside, UA):
     return (temp_outside - temp_inside) * UA  # W
 
+df['cooling_power'] = model_cooling_power(df['T_stored'], T_AMBIANT, UA)
 
-# def extract_cooling_samples(df):
+def model_flow(df, var):
+    return df[var].diff() / 1000 / SAMPLE_INTERVAL
 
-df['cooling_start'] = float("nan")
+df['F_solar'] = 4 * model_flow(df, 'Vep') # m³/s
+df['F_hot_water'] = model_flow(df, 'Vecs') # m³/s
 
-summary(df)
+# P(W) = qv * rho * cp * (Ts - Ti)
 
-decreasing_since_t = None
+# qv : débit volumique, m3/s
+# rho : masse volumique eau, 1000 kg/m3
+# cp : capacité calorifique de l'eau, 4185 J / kg.°C
+# Ts : Température de sortie du ballon, °C
+# Ti : Température d'entrée du ballon, °C
 
-df['dT_stored'] = df['T_stored'].diff()
+def model_flowing_power(flow, exchanger_in, exchanger_out):
+  return flow * rho * cp * (exchanger_in - exchanger_out)
 
-for index, row in df.iterrows():
-    is_flowing = row['F_solar'] != 0 or row['F_hot_water'] != 0
-    if row['dT_stored'] <= 0 and not is_flowing:
-        if decreasing_since_t is None:
-            decreasing_since_t = row['clock']
-        df.loc[index, 'cooling_start'] = decreasing_since_t
-    else:
-        decreasing_since_t = None
+df['solar_power'] = model_flowing_power(df['F_solar'], df['Txe'], df['Txs'])
+df['solar_power'] = df['solar_power'].rolling(window=60).mean()
 
-df['cooling_time'] = df['clock'] - df['cooling_start']
+df['consumed_power'] = model_flowing_power(df['F_hot_water'], df['Tef'], df['Tec'])
+df['consumed_power'] = df['consumed_power'].rolling(window=60).mean()
 
-# extract_cooling_samples(df)
+df['power_error'] = df['power'] - df['cooling_power'] - df['solar_power'] - df['consumed_power']
 
-summary(df)
+df_powers = pd.melt(df, id_vars=['date'], value_vars=[ c for c in df.columns if 'power' in c], var_name='label', value_name='power')
 
-# def extract_cooling_samples(df):
+#sns.relplot(x='clock', y="power_SMA", kind="line", data=df)
+sns.relplot(x='date', y="power", kind="line", hue="label", data=df_powers)
 
-#     df['cooling_start']
-#     df['cooling_time']
+#df_temps = pd.melt(df, id_vars=['clock'], value_vars=[ c for c in df.columns if c[0] == 'T'], var_name='label', value_name='temperature')
 
-#     cooling_samples = []
-#     decreasing_since_id = None
-#     decreasing_since_t = None
-#     last_stored_temp = df.iloc[0]['T_stored']
-#     for index, row in df.iterrows():
-#         temp = row['T_stored']
-#         time = row['clock']
-#         is_flowing = row['F_solar'] != 0 or row['F_hot_water'] != 0
-#         if temp <= last_stored_temp and not is_flowing:
-#             if decreasing_since_id is None:
-#                 decreasing_since_t = time
-#                 decreasing_since_id = index
-#         else:
-#             if decreasing_since_id is not None and time - decreasing_since_t > 3600:
-#                 cooling_samples.append(df.iloc[decreasing_since_id:index-1])
-#             decreasing_since_id = None
-#         last_stored_temp = row['T_stored']
-#     return cooling_samples
-
-# print(len(extract_cooling_samples(df)))
-
-df['dT_stored_SMA'] = df['dT_stored'].rolling(window=10).mean()
-
-# sns.relplot(x='cooling_time', y="dT_stored_SMA", data=df)
-
-df_cooling = df.dropna(subset=['cooling_start'])
-
-print(df_cooling['dT_stored_SMA'].median())
-
-sns.distplot(df_cooling['dT_stored_SMA'])
-
-# sns.relplot(x='cooling_time', y="T_stored", kind="line", hue='cooling_start', data=df)
-
-plt.show()
-
-df_temps = pd.melt(df, id_vars=['clock'], value_vars=[ c for c in df.columns if c[0] == 'T'], var_name='label', value_name='temperature')
-
-summary(df_temps)
-
-sns.relplot(x='clock', y="temperature", kind="line", hue="label", data=df_temps)
+#sns.relplot(x='clock', y="temperature", kind="line", hue="label", data=df_temps)
 # sns.relplot(x="total_bill", y="tip", data=tips);
 
 # Set the width and height of the figure
