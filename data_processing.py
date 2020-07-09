@@ -59,6 +59,9 @@ class DataProcessing():
         data['Vecs'] = data['Vecs_pulses']
         data['Vep'] = data['Vep_pulses']
         data['Eax'] = data['Eax_pulses'] / 800
+        data['Epst'] = 0
+        data['Eut'] = 0
+        data['Epd'] = 0
 
         return data
 
