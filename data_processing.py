@@ -2,37 +2,55 @@
 
 import os
 import json
+from energy_modeling import model_water_energy
+
+RAW_DATA_LABELS = [
+    'Vecs_pulses',
+    'Vep_pulses',
+    'Eax_pulses',
+    'Teh', # Haut du ballon
+    'Teb', # Bas du ballon
+    'Tec', # Eau chaude
+    'Tef', # Eau froide
+    'Tep', # Température des panneaux
+    'Txe', # Entrée échangeur
+    'Txs', # Sortie échangeur
+]
 
 class DataProcessing():
 
     def __init__(self, counters):
         self.counters = counters
-        self.prev_ticks = {}
+        self.prev_counters = {}
+
+        self.prev_volume_solar = None
+        self.prev_volume_used = None
 
     # Données utiles, préconisations:
     #
     # Vecs: volume d’eau froide à l’entrée du ballon solaire
     # Tef: température de l’eau froide
     # Tec: température de l’eau chaude directement à la sortie du ballon
-    # TODO Consommation électrique
-
-    # FIXME Pourquoi température eau froide entre 30 et 45 °C
 
     def process(self, data):
 
-        labels = [
-            'Vecs_pulses',
-            'Vep_pulses',
-            'Eax_pulses',
-            'Teh', # Haut du ballon
-            'Teb', # Bas du ballon
-            'Tec', # Eau chaude
-            'Tef', # Eau froide
-            'Tep', # TODO Eau sortant du circuit des panneaux (code arduino) vs Température des panneaux (rapport)
-            'Txe', # TODO Entrée échangeur?
-            'Txs', # TODO Sortie échangeur?
-        ]
-        data = dict(zip(labels, data))
+        data = dict(zip(RAW_DATA_LABELS, data))
+
+        volume_solar = data['Vep_pulses'] / 1000 # m³
+        volume_used = data['Vecs_pulses'] / 1000 # m³
+
+        if self.prev_volume_solar is not None and volume_solar > self.prev_volume_solar:
+            volume_diff = volume_solar - self.prev_volume_solar
+            energy_diff = model_water_energy(volume_diff, data['Txe'], data['Txs'])
+            self.counters.update('Epst', energy_diff) # J
+
+        if self.prev_volume_used is not None and volume_used > self.prev_volume_used:
+            volume_diff = volume_used - self.prev_volume_used
+            energy_diff = model_water_energy(volume_diff, data['Tef'], data['Tec'])
+            self.counters.update('Eut', energy_diff) # J
+
+        self.prev_volume_solar = volume_solar
+        self.prev_volume_used = volume_used
 
         # Handle counter resets
 
@@ -40,27 +58,23 @@ class DataProcessing():
         have_counters_been_reset = False
 
         for label in counted:
-            if not label in self.prev_ticks or data[label] < self.prev_ticks[label]:
+            if not label in self.prev_counters or data[label] < self.prev_counters[label]:
                 have_counters_been_reset = True
                 break
 
         for label in counted:
             curr = data[label]
             if not have_counters_been_reset:
-                diff = data[label] - self.prev_ticks.get(label, 0)
+                diff = data[label] - self.prev_counters.get(label, 0)
                 self.counters.update(label, diff)
             data[label] = self.counters.get(label)
-            self.prev_ticks[label] = curr
+            self.prev_counters[label] = curr
 
-        # FIXME rapport de stage 1 tick = 0.250 litres
-        #       code Arduino V1  1 tick = 0.375 litres
-        #       code Arduino V2  1 tick = 0.500 litres
-
-        data['Vecs'] = data['Vecs_pulses']
-        data['Vep'] = data['Vep_pulses']
-        data['Eax'] = data['Eax_pulses'] / 800
-        data['Epst'] = 0
-        data['Eut'] = 0
+        data['Vecs'] = data['Vecs_pulses'] # l
+        data['Vep'] = data['Vep_pulses'] # l
+        data['Eax'] = data['Eax_pulses'] / 800 # kWh
+        data['Epst'] = self.counters.get('Epst') / 3600 / 1000 # kWh
+        data['Eut'] = self.counters.get('Eut') / 3600 / 1000 # kWh
         data['Epd'] = 0
 
         return data
@@ -93,6 +107,7 @@ class PersistentCounters():
 if __name__ == '__main__':
 
     import unittest
+    from energy_modeling import cp
 
     class TestDataProcessing(unittest.TestCase):
 
@@ -103,10 +118,11 @@ if __name__ == '__main__':
                                 52.37, 47.02, 43.94, 37.66, 18.15, 48.62, 47.08]
 
         def set_mocked_data(self, label, value):
-            if label == 'Vecs_pulses':
-                self.mocked_data[0] = value
-            else:
-                raise NotImplementedError
+            for i, mocked_data_label in enumerate(RAW_DATA_LABELS):
+                if label == mocked_data_label:
+                    self.mocked_data[i] = value
+                    return
+            raise ValueError
 
         def test_label_raw_data_line(self):
             data = self.processing.process(self.mocked_data)
@@ -174,5 +190,35 @@ if __name__ == '__main__':
             data = self.processing.process(self.mocked_data)
 
             self.assertEqual(data['Vecs_pulses'], 5)
+
+        def test_used_water_energy(self):
+
+            self.set_mocked_data('Vecs_pulses', 0)
+            self.set_mocked_data('Tef', 15)
+            self.set_mocked_data('Tec', 16)
+
+            data = self.processing.process(self.mocked_data)
+            self.assertEqual(0, data['Eut'])
+
+            # Increasing 1 kg of water of a K
+            self.set_mocked_data('Vecs_pulses', 1)
+
+            data = self.processing.process(self.mocked_data)
+            self.assertAlmostEqual(-cp, data['Eut'] * 1000 * 3600)
+
+        def test_solar_water_energy(self):
+
+            self.set_mocked_data('Vep_pulses', 0)
+            self.set_mocked_data('Txe', 16)
+            self.set_mocked_data('Txs', 15)
+
+            data = self.processing.process(self.mocked_data)
+            self.assertEqual(0, data['Epst'])
+
+            # Increasing 1 kg of water of a K
+            self.set_mocked_data('Vep_pulses', 1)
+
+            data = self.processing.process(self.mocked_data)
+            self.assertAlmostEqual(cp, data['Epst'] * 1000 * 3600)
 
     unittest.main()
