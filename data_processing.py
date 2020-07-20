@@ -22,9 +22,8 @@ class DataProcessing():
 
         labels = [
             'Vecs_pulses',
-            'Vecs',
             'Vep_pulses',
-            'Vep',
+            'Eax_pulses',
             'Teh', # Haut du ballon
             'Teb', # Bas du ballon
             'Tec', # Eau chaude
@@ -37,7 +36,7 @@ class DataProcessing():
 
         # Handle counter resets
 
-        counted = ['Vecs_pulses', 'Vep_pulses']
+        counted = ['Vecs_pulses', 'Vep_pulses', 'Eax_pulses']
         have_counters_been_reset = False
 
         for label in counted:
@@ -57,8 +56,12 @@ class DataProcessing():
         #       code Arduino V1  1 tick = 0.375 litres
         #       code Arduino V2  1 tick = 0.500 litres
 
-        data['Vecs'] = data['Vecs_pulses'] * 0.25
-        data['Vep'] = data['Vep_pulses'] * 0.25
+        data['Vecs'] = data['Vecs_pulses']
+        data['Vep'] = data['Vep_pulses']
+        data['Eax'] = data['Eax_pulses'] / 800
+        data['Epst'] = 0
+        data['Eut'] = 0
+        data['Epd'] = 0
 
         return data
 
@@ -96,7 +99,7 @@ if __name__ == '__main__':
         def setUp(self):
             self.counters = PersistentCounters()
             self.processing = DataProcessing(self.counters)
-            self.mocked_data = [0, 0, 0, 0,
+            self.mocked_data = [0, 0, 0,
                                 52.37, 47.02, 43.94, 37.66, 18.15, 48.62, 47.08]
 
         def set_mocked_data(self, label, value):
@@ -110,6 +113,7 @@ if __name__ == '__main__':
             expected = {
                 'Vecs_pulses': 0,
                 'Vep_pulses': 0,
+                'Eax_pulses': 0,
                 'Teh': 52.37,
                 'Teb': 47.02,
                 'Tec': 43.94,

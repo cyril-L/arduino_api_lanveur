@@ -35,20 +35,19 @@ class SerialReader():
             return None
         line = line.strip("; \r\n")
         line = line.split(";")
-        if len(line) != 11:
+        if len(line) != 10:
             return None
         try:
             return [int(line[0]),
                     int(line[1]),
                     int(line[2]),
-                    int(line[3]),
+                    float(line[3]),
                     float(line[4]),
                     float(line[5]),
                     float(line[6]),
                     float(line[7]),
                     float(line[8]),
-                    float(line[9]),
-                    float(line[10])]
+                    float(line[9])]
         except ValueError:
             return None
 
@@ -138,10 +137,10 @@ if __name__ == '__main__':
     class TestSerialReader(unittest.TestCase):
 
         def test_returns_parsed_data(self):
-            serial = io.BytesIO(b';    225   ;   84    ;    10570  ;  5285       ;       52.37   ;     47.02   ;     43.94   ;     37.66   ;     18.15   ;     48.62   ;     47.08   ;       \r\n')
+            serial = io.BytesIO(b'10570 ; 5285 ; 225 ; 52.37 ; 47.02 ; 43.94 ; 37.66 ; 18.15 ; 48.62 ; 47.08 ; \r\n')
             reader = SerialReader(serial)
             data = reader.read_data_line()
-            expected = [225, 84, 10570, 5285, 52.37, 47.02, 43.94, 37.66, 18.15, 48.62, 47.08]
+            expected = [10570, 5285, 225, 52.37, 47.02, 43.94, 37.66, 18.15, 48.62, 47.08]
             self.assertEqual(data, expected)
 
         def test_returns_none_on_invalid_data(self):
@@ -154,7 +153,7 @@ if __name__ == '__main__':
 
         def test_returns_none_on_header(self):
             # First line sent by the Arduino
-            serial = io.BytesIO(b';  D1 Impuls et Volume (L)  ;    D2 Impuls et Volume (l)  ;  S1 H ballon (\xc2\xb0C) ; S2 B ballon (\xc2\xb0C) ;  S3 Sortie ballon(\xc2\xb0C) ;  S4 Eau froide (\xc2\xb0C) ;  S5 sortie Panneaux(\xc2\xb0C) ; Entrer Echang (\xc2\xb0C) ; Sortie Echang(\xc2\xb0C)\r\n')
+            serial = io.BytesIO(b'Vecs pulses ; Vep pulses  ; Eaux pulses ; Vep ; Teh ;  Teb ;  Tec ;  Tef ; Tep ; Txe ; Txs ; \r\n')
             reader = SerialReader(serial)
             with self.assertLogs(level='WARN'):
                 data = reader.read_data_line()
@@ -162,7 +161,7 @@ if __name__ == '__main__':
 
         def test_returns_none_on_corrupted_data(self):
             # Typical line read when connecting to the Arduino
-            serial = io.BytesIO(b';     52.37   ;     46.52   ;     22.83   ;     58.89   ;     57.05   ;       6478  ;  3239       ;       63.20   ;     56.12   ;     52.37   ;     46.52   ;     22.83   ;     58.89   ;     57.05   ;\r\n')
+            serial = io.BytesIO(b'52.37 ; 46.52 ; 22.83 ; 58.89 ; 57.05 ; 6478 ; 3239 ; 225 ; 63.20 ; 56.12 ; 52.37 ; 46.52 ; 22.83 ; 58.89 ; 57.05 ; \r\n')
             reader = SerialReader(serial)
             with self.assertLogs(level='WARN'):
                 data = reader.read_data_line()
@@ -180,6 +179,8 @@ if __name__ == '__main__':
             class MockSerialTimeout():
                 def readline(self):
                     return b''
+                def flush(self):
+                    pass
             serial = MockSerialTimeout()
             reader = SerialReader(serial)
             with self.assertLogs(level='ERROR'):
