@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
-SAMPLE_INTERVAL = 60
-V_STORED_WATER = 0.3  # m³
-T_AMBIANT = 19  # °C
+import config
 
 # Specific heat capacity
 # amount of energy that must be added, in the form of heat, to one unit of mass of the substance in order to cause an increase of one unit in its temperature.
@@ -18,10 +16,10 @@ cp = 4179.6 # J / kg·K
 rho = 1000 # kg / m³
 
 def deg_to_joules(deg):
-    return deg * cp * V_STORED_WATER * rho # K.J/K
+    return deg * cp * config.STORED_WATER_VOLUME * rho # K.J/K
 
 def joules_to_deg(joules):
-    return joules / (cp * V_STORED_WATER * rho) # J.K/J
+    return joules / (cp * config.STORED_WATER_VOLUME * rho) # J.K/J
 
 # modeling like
 #
@@ -53,7 +51,7 @@ def model_stored_temp(temp_bottom, temp_top):
 # Cr constante de refroidissement par jour (ex. 0,103 Wh/l.K.j)
 
 UA = 3.5
-Us = UA / V_STORED_WATER # Us
+Us = UA / config.STORED_WATER_VOLUME # Us
 Cr = 85400 * Us / (3600 * 1000)
 
 def model_cooling_power(temp_inside, temp_outside, UA):

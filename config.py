@@ -2,6 +2,14 @@ import os
 
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
 
+SOLAR_PANNEL_AREA = 6 # m²
+
+STORED_WATER_VOLUME = 0.3 # m³
+
+AUX_ENERGY_METER_TICKS_PER_KWH = 800
+SOLAR_WATER_METER_TICKS_PER_L = 1
+USED_WATER_METER_TICKS_PER_L = 1
+
 SERIAL_DEVICE = "/dev/ttyACM0"
 SERIAL_BAUDRATE = 9600
 
