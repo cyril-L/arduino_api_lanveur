@@ -1,0 +1,731 @@
+EESchema Schematic File Version 4
+EELAYER 30 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title "Solar heater monitoring"
+Date "2020-08-24"
+Rev "2"
+Comp "Monitoring de la production et du stockage d’eau chaude solaire"
+Comment1 "École de Lanveur"
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L Sensor_Temperature:DS18B20 U6
+U 1 1 5EC39B8C
+P 5850 2900
+F 0 "U6" H 5620 2946 50  0000 R CNN
+F 1 "Teb" H 5620 2855 50  0000 R CNN
+F 2 "Package_TO_SOT_THT:TO-92_Inline" H 4850 2650 50  0001 C CNN
+F 3 "http://datasheets.maximintegrated.com/en/ds/DS18B20.pdf" H 5700 3150 50  0001 C CNN
+	1    5850 2900
+	1    0    0    -1  
+$EndComp
+$Comp
+L Sensor_Temperature:DS18B20 U7
+U 1 1 5EC39C15
+P 6600 2900
+F 0 "U7" H 6370 2946 50  0000 R CNN
+F 1 "Tec" H 6370 2855 50  0000 R CNN
+F 2 "Package_TO_SOT_THT:TO-92_Inline" H 5600 2650 50  0001 C CNN
+F 3 "http://datasheets.maximintegrated.com/en/ds/DS18B20.pdf" H 6450 3150 50  0001 C CNN
+	1    6600 2900
+	1    0    0    -1  
+$EndComp
+$Comp
+L Sensor_Temperature:DS18B20 U5
+U 1 1 5EC3A05A
+P 5150 2900
+F 0 "U5" H 4920 2946 50  0000 R CNN
+F 1 "Teh" H 4920 2855 50  0000 R CNN
+F 2 "Package_TO_SOT_THT:TO-92_Inline" H 4150 2650 50  0001 C CNN
+F 3 "http://datasheets.maximintegrated.com/en/ds/DS18B20.pdf" H 5000 3150 50  0001 C CNN
+	1    5150 2900
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+5V #PWR08
+U 1 1 5EC3AC02
+P 5150 2550
+F 0 "#PWR08" H 5150 2400 50  0001 C CNN
+F 1 "+5V" H 5165 2723 50  0000 C CNN
+F 2 "" H 5150 2550 50  0001 C CNN
+F 3 "" H 5150 2550 50  0001 C CNN
+	1    5150 2550
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+5V #PWR03
+U 1 1 5EC3AD80
+P 9700 2450
+F 0 "#PWR03" H 9700 2300 50  0001 C CNN
+F 1 "+5V" H 9715 2623 50  0000 C CNN
+F 2 "" H 9700 2450 50  0001 C CNN
+F 3 "" H 9700 2450 50  0001 C CNN
+	1    9700 2450
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR022
+U 1 1 5EC3AFB3
+P 9500 5050
+F 0 "#PWR022" H 9500 4800 50  0001 C CNN
+F 1 "GND" H 9505 4877 50  0000 C CNN
+F 2 "" H 9500 5050 50  0001 C CNN
+F 3 "" H 9500 5050 50  0001 C CNN
+	1    9500 5050
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR020
+U 1 1 5EC3B216
+P 5850 3250
+F 0 "#PWR020" H 5850 3000 50  0001 C CNN
+F 1 "GND" H 5855 3077 50  0000 C CNN
+F 2 "" H 5850 3250 50  0001 C CNN
+F 3 "" H 5850 3250 50  0001 C CNN
+	1    5850 3250
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R2
+U 1 1 5EC3BFE3
+P 7950 3050
+F 0 "R2" H 8020 3096 50  0000 L CNN
+F 1 "4.7k" H 8020 3005 50  0000 L CNN
+F 2 "" V 7880 3050 50  0001 C CNN
+F 3 "~" H 7950 3050 50  0001 C CNN
+	1    7950 3050
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+5V #PWR012
+U 1 1 5EC3C17A
+P 7950 2800
+F 0 "#PWR012" H 7950 2650 50  0001 C CNN
+F 1 "+5V" H 7965 2973 50  0000 C CNN
+F 2 "" H 7950 2800 50  0001 C CNN
+F 3 "" H 7950 2800 50  0001 C CNN
+	1    7950 2800
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+5V #PWR09
+U 1 1 5EC3DC06
+P 5850 2550
+F 0 "#PWR09" H 5850 2400 50  0001 C CNN
+F 1 "+5V" H 5865 2723 50  0000 C CNN
+F 2 "" H 5850 2550 50  0001 C CNN
+F 3 "" H 5850 2550 50  0001 C CNN
+	1    5850 2550
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+5V #PWR010
+U 1 1 5EC3DC65
+P 6600 2550
+F 0 "#PWR010" H 6600 2400 50  0001 C CNN
+F 1 "+5V" H 6615 2723 50  0000 C CNN
+F 2 "" H 6600 2550 50  0001 C CNN
+F 3 "" H 6600 2550 50  0001 C CNN
+	1    6600 2550
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR019
+U 1 1 5EC3DD71
+P 5150 3250
+F 0 "#PWR019" H 5150 3000 50  0001 C CNN
+F 1 "GND" H 5155 3077 50  0000 C CNN
+F 2 "" H 5150 3250 50  0001 C CNN
+F 3 "" H 5150 3250 50  0001 C CNN
+	1    5150 3250
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR021
+U 1 1 5EC3DE7C
+P 6600 3250
+F 0 "#PWR021" H 6600 3000 50  0001 C CNN
+F 1 "GND" H 6605 3077 50  0000 C CNN
+F 2 "" H 6600 3250 50  0001 C CNN
+F 3 "" H 6600 3250 50  0001 C CNN
+	1    6600 3250
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5150 2550 5150 2600
+Wire Wire Line
+	5150 3200 5150 3250
+Wire Wire Line
+	5850 2550 5850 2600
+Wire Wire Line
+	5850 3200 5850 3250
+Wire Wire Line
+	6600 2550 6600 2600
+Wire Wire Line
+	6600 3200 6600 3250
+$Comp
+L Sensor_Temperature:DS18B20 U2
+U 1 1 5EC40922
+P 2700 2900
+F 0 "U2" H 2470 2946 50  0000 R CNN
+F 1 "Teb" H 2470 2855 50  0000 R CNN
+F 2 "Package_TO_SOT_THT:TO-92_Inline" H 1700 2650 50  0001 C CNN
+F 3 "http://datasheets.maximintegrated.com/en/ds/DS18B20.pdf" H 2550 3150 50  0001 C CNN
+	1    2700 2900
+	1    0    0    -1  
+$EndComp
+$Comp
+L Sensor_Temperature:DS18B20 U3
+U 1 1 5EC40929
+P 3450 2900
+F 0 "U3" H 3220 2946 50  0000 R CNN
+F 1 "Tec" H 3220 2855 50  0000 R CNN
+F 2 "Package_TO_SOT_THT:TO-92_Inline" H 2450 2650 50  0001 C CNN
+F 3 "http://datasheets.maximintegrated.com/en/ds/DS18B20.pdf" H 3300 3150 50  0001 C CNN
+	1    3450 2900
+	1    0    0    -1  
+$EndComp
+$Comp
+L Sensor_Temperature:DS18B20 U4
+U 1 1 5EC40930
+P 4150 2900
+F 0 "U4" H 3920 2946 50  0000 R CNN
+F 1 "Tef" H 3920 2855 50  0000 R CNN
+F 2 "Package_TO_SOT_THT:TO-92_Inline" H 3150 2650 50  0001 C CNN
+F 3 "http://datasheets.maximintegrated.com/en/ds/DS18B20.pdf" H 4000 3150 50  0001 C CNN
+	1    4150 2900
+	1    0    0    -1  
+$EndComp
+$Comp
+L Sensor_Temperature:DS18B20 U1
+U 1 1 5EC40937
+P 2000 2900
+F 0 "U1" H 1770 2946 50  0000 R CNN
+F 1 "Teh" H 1770 2855 50  0000 R CNN
+F 2 "Package_TO_SOT_THT:TO-92_Inline" H 1000 2650 50  0001 C CNN
+F 3 "http://datasheets.maximintegrated.com/en/ds/DS18B20.pdf" H 1850 3150 50  0001 C CNN
+	1    2000 2900
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+5V #PWR04
+U 1 1 5EC4093E
+P 2000 2550
+F 0 "#PWR04" H 2000 2400 50  0001 C CNN
+F 1 "+5V" H 2015 2723 50  0000 C CNN
+F 2 "" H 2000 2550 50  0001 C CNN
+F 3 "" H 2000 2550 50  0001 C CNN
+	1    2000 2550
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR016
+U 1 1 5EC40944
+P 2700 3250
+F 0 "#PWR016" H 2700 3000 50  0001 C CNN
+F 1 "GND" H 2705 3077 50  0000 C CNN
+F 2 "" H 2700 3250 50  0001 C CNN
+F 3 "" H 2700 3250 50  0001 C CNN
+	1    2700 3250
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R1
+U 1 1 5EC4094B
+P 7600 3050
+F 0 "R1" H 7670 3096 50  0000 L CNN
+F 1 "4.7k" H 7670 3005 50  0000 L CNN
+F 2 "" V 7530 3050 50  0001 C CNN
+F 3 "~" H 7600 3050 50  0001 C CNN
+	1    7600 3050
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+5V #PWR011
+U 1 1 5EC40952
+P 7600 2800
+F 0 "#PWR011" H 7600 2650 50  0001 C CNN
+F 1 "+5V" H 7615 2973 50  0000 C CNN
+F 2 "" H 7600 2800 50  0001 C CNN
+F 3 "" H 7600 2800 50  0001 C CNN
+	1    7600 2800
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+5V #PWR05
+U 1 1 5EC40958
+P 2700 2550
+F 0 "#PWR05" H 2700 2400 50  0001 C CNN
+F 1 "+5V" H 2715 2723 50  0000 C CNN
+F 2 "" H 2700 2550 50  0001 C CNN
+F 3 "" H 2700 2550 50  0001 C CNN
+	1    2700 2550
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+5V #PWR06
+U 1 1 5EC4095E
+P 3450 2550
+F 0 "#PWR06" H 3450 2400 50  0001 C CNN
+F 1 "+5V" H 3465 2723 50  0000 C CNN
+F 2 "" H 3450 2550 50  0001 C CNN
+F 3 "" H 3450 2550 50  0001 C CNN
+	1    3450 2550
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+5V #PWR07
+U 1 1 5EC40964
+P 4150 2550
+F 0 "#PWR07" H 4150 2400 50  0001 C CNN
+F 1 "+5V" H 4165 2723 50  0000 C CNN
+F 2 "" H 4150 2550 50  0001 C CNN
+F 3 "" H 4150 2550 50  0001 C CNN
+	1    4150 2550
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR015
+U 1 1 5EC4096A
+P 2000 3250
+F 0 "#PWR015" H 2000 3000 50  0001 C CNN
+F 1 "GND" H 2005 3077 50  0000 C CNN
+F 2 "" H 2000 3250 50  0001 C CNN
+F 3 "" H 2000 3250 50  0001 C CNN
+	1    2000 3250
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR017
+U 1 1 5EC40970
+P 3450 3250
+F 0 "#PWR017" H 3450 3000 50  0001 C CNN
+F 1 "GND" H 3455 3077 50  0000 C CNN
+F 2 "" H 3450 3250 50  0001 C CNN
+F 3 "" H 3450 3250 50  0001 C CNN
+	1    3450 3250
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR018
+U 1 1 5EC40976
+P 4150 3250
+F 0 "#PWR018" H 4150 3000 50  0001 C CNN
+F 1 "GND" H 4155 3077 50  0000 C CNN
+F 2 "" H 4150 3250 50  0001 C CNN
+F 3 "" H 4150 3250 50  0001 C CNN
+	1    4150 3250
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2000 2550 2000 2600
+Wire Wire Line
+	2000 3200 2000 3250
+Wire Wire Line
+	2700 2550 2700 2600
+Wire Wire Line
+	2700 3200 2700 3250
+Wire Wire Line
+	3450 2550 3450 2600
+Wire Wire Line
+	4150 2550 4150 2600
+Wire Wire Line
+	4150 3200 4150 3250
+Wire Wire Line
+	3450 3200 3450 3250
+Wire Wire Line
+	6900 3550 6900 2900
+Wire Wire Line
+	6900 3550 6150 3550
+Wire Wire Line
+	6150 3550 6150 2900
+Wire Wire Line
+	6150 3550 5450 3550
+Wire Wire Line
+	5450 3550 5450 2900
+Connection ~ 6150 3550
+Wire Wire Line
+	2300 3650 2300 2900
+Wire Wire Line
+	2300 3650 3000 3650
+Wire Wire Line
+	3000 2900 3000 3650
+Connection ~ 3000 3650
+Wire Wire Line
+	3000 3650 3750 3650
+Wire Wire Line
+	3750 2900 3750 3650
+Connection ~ 3750 3650
+Wire Wire Line
+	3750 3650 4450 3650
+Wire Wire Line
+	4450 2900 4450 3650
+Wire Wire Line
+	9400 4850 9500 4850
+Connection ~ 9500 4850
+Wire Wire Line
+	9500 4850 9600 4850
+$Comp
+L Switch:SW_DIP_x01 SW1
+U 1 1 5EC6FB05
+P 6150 1100
+F 0 "SW1" H 6150 1367 50  0000 C CNN
+F 1 "Vec" H 6150 1276 50  0000 C CNN
+F 2 "" H 6150 1100 50  0001 C CNN
+F 3 "" H 6150 1100 50  0001 C CNN
+	1    6150 1100
+	1    0    0    -1  
+$EndComp
+$Comp
+L Switch:SW_DIP_x01 SW2
+U 1 1 5EC6FF1F
+P 6100 1600
+F 0 "SW2" H 6100 1867 50  0000 C CNN
+F 1 "Vep" H 6100 1776 50  0000 C CNN
+F 2 "" H 6100 1600 50  0001 C CNN
+F 3 "" H 6100 1600 50  0001 C CNN
+	1    6100 1600
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9700 2750 9700 2450
+$Comp
+L power:GND #PWR02
+U 1 1 5EC71C90
+P 5600 1650
+F 0 "#PWR02" H 5600 1400 50  0001 C CNN
+F 1 "GND" H 5605 1477 50  0000 C CNN
+F 2 "" H 5600 1650 50  0001 C CNN
+F 3 "" H 5600 1650 50  0001 C CNN
+	1    5600 1650
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR01
+U 1 1 5EC71E89
+P 5650 1150
+F 0 "#PWR01" H 5650 900 50  0001 C CNN
+F 1 "GND" H 5655 977 50  0000 C CNN
+F 2 "" H 5650 1150 50  0001 C CNN
+F 3 "" H 5650 1150 50  0001 C CNN
+	1    5650 1150
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5650 1150 5650 1100
+Wire Wire Line
+	5650 1100 5850 1100
+Wire Wire Line
+	5600 1650 5600 1600
+Wire Wire Line
+	5600 1600 5800 1600
+$Comp
+L Device:R R3
+U 1 1 5EC73DEF
+P 8300 3050
+F 0 "R3" H 8370 3096 50  0000 L CNN
+F 1 "4.7k" H 8370 3005 50  0000 L CNN
+F 2 "" V 8230 3050 50  0001 C CNN
+F 3 "~" H 8300 3050 50  0001 C CNN
+	1    8300 3050
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+5V #PWR013
+U 1 1 5EC7401C
+P 8300 2800
+F 0 "#PWR013" H 8300 2650 50  0001 C CNN
+F 1 "+5V" H 8315 2973 50  0000 C CNN
+F 2 "" H 8300 2800 50  0001 C CNN
+F 3 "" H 8300 2800 50  0001 C CNN
+	1    8300 2800
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R4
+U 1 1 5EC74590
+P 8650 3050
+F 0 "R4" H 8720 3096 50  0000 L CNN
+F 1 "4.7k" H 8720 3005 50  0000 L CNN
+F 2 "" V 8580 3050 50  0001 C CNN
+F 3 "~" H 8650 3050 50  0001 C CNN
+	1    8650 3050
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+5V #PWR014
+U 1 1 5EC74597
+P 8650 2800
+F 0 "#PWR014" H 8650 2650 50  0001 C CNN
+F 1 "+5V" H 8665 2973 50  0000 C CNN
+F 2 "" H 8650 2800 50  0001 C CNN
+F 3 "" H 8650 2800 50  0001 C CNN
+	1    8650 2800
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	8650 2900 8650 2800
+Wire Wire Line
+	9500 4850 9500 5050
+Wire Wire Line
+	8650 3200 8650 3350
+Wire Wire Line
+	8650 3350 9000 3350
+Connection ~ 8650 3350
+Wire Wire Line
+	8300 3200 8300 3450
+Wire Wire Line
+	8300 3450 9000 3450
+Wire Wire Line
+	7950 3200 7950 3550
+Wire Wire Line
+	7950 3550 9000 3550
+Wire Wire Line
+	7600 3200 7600 3650
+Wire Wire Line
+	7600 3650 9000 3650
+Wire Wire Line
+	7600 2800 7600 2900
+Wire Wire Line
+	7950 2800 7950 2900
+Wire Wire Line
+	8300 2800 8300 2900
+Wire Wire Line
+	7300 1100 6450 1100
+Text Notes 1550 950  0    100  ~ 0
+Water meter pulses
+Text Notes 1550 2200 0    100  ~ 0
+DS18B20 temperature sensors
+Text Notes 2550 3850 0    100  ~ 0
+Onewire bus 1
+Text Notes 5400 3850 0    100  ~ 0
+Onewire bus 2
+Wire Notes Line
+	7100 2000 1500 2000
+Wire Notes Line
+	1500 2000 1500 4250
+Wire Notes Line
+	1500 4250 7100 4250
+Wire Notes Line
+	7100 2000 7100 4250
+Text Notes 4400 1150 0    100  ~ 0
+Consumption
+Text Notes 4350 1650 0    100  ~ 0
+Solar system
+Wire Wire Line
+	9000 3750 7600 3750
+Wire Notes Line
+	5350 4300 5350 5600
+Wire Notes Line
+	5350 5600 1500 5600
+Wire Notes Line
+	1500 5600 1500 4300
+Wire Notes Line
+	1500 4300 5350 4300
+$Comp
+L Device:R R5
+U 1 1 5F134491
+P 4400 5100
+F 0 "R5" H 4470 5146 50  0000 L CNN
+F 1 "10k" H 4470 5055 50  0000 L CNN
+F 2 "" V 4330 5100 50  0001 C CNN
+F 3 "~" H 4400 5100 50  0001 C CNN
+	1    4400 5100
+	1    0    0    -1  
+$EndComp
+Text GLabel 4000 4650 0    50   Input ~ 0
+SO+
+Text GLabel 4000 4800 0    50   Input ~ 0
+SO-
+Wire Wire Line
+	4000 4800 4400 4800
+Wire Wire Line
+	4400 4800 4400 4950
+$Comp
+L power:GND #PWR024
+U 1 1 5F137DD6
+P 4400 5350
+F 0 "#PWR024" H 4400 5100 50  0001 C CNN
+F 1 "GND" H 4405 5177 50  0000 C CNN
+F 2 "" H 4400 5350 50  0001 C CNN
+F 3 "" H 4400 5350 50  0001 C CNN
+	1    4400 5350
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4400 5250 4400 5350
+$Comp
+L power:+5V #PWR023
+U 1 1 5F13A393
+P 4400 4550
+F 0 "#PWR023" H 4400 4400 50  0001 C CNN
+F 1 "+5V" H 4415 4723 50  0000 C CNN
+F 2 "" H 4400 4550 50  0001 C CNN
+F 3 "" H 4400 4550 50  0001 C CNN
+	1    4400 4550
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4000 4650 4400 4650
+Wire Wire Line
+	4400 4650 4400 4550
+$Comp
+L MCU_Module:Arduino_UNO_R2 A1
+U 1 1 5F43E851
+P 9500 3750
+F 0 "A1" H 9850 4850 50  0000 C CNN
+F 1 "Arduino_UNO_R2" H 10100 4750 50  0000 C CNN
+F 2 "Module:Arduino_UNO_R2" H 9500 3750 50  0001 C CIN
+F 3 "https://www.arduino.cc/en/Main/arduinoBoardUno" H 9500 3750 50  0001 C CNN
+	1    9500 3750
+	1    0    0    -1  
+$EndComp
+NoConn ~ 9000 3150
+NoConn ~ 9000 3250
+NoConn ~ 9600 2750
+NoConn ~ 10000 3150
+NoConn ~ 10000 3350
+NoConn ~ 10000 3550
+NoConn ~ 10000 3750
+NoConn ~ 10000 3850
+NoConn ~ 10000 3950
+NoConn ~ 10000 4050
+NoConn ~ 10000 4150
+NoConn ~ 10000 4250
+NoConn ~ 9000 3850
+NoConn ~ 9000 3950
+NoConn ~ 9000 4050
+NoConn ~ 9000 4150
+NoConn ~ 9000 4250
+NoConn ~ 9000 4350
+NoConn ~ 9000 4450
+$Comp
+L power:+12V #PWR025
+U 1 1 5F4587D3
+P 9400 2450
+F 0 "#PWR025" H 9400 2300 50  0001 C CNN
+F 1 "+12V" H 9415 2623 50  0000 C CNN
+F 2 "" H 9400 2450 50  0001 C CNN
+F 3 "" H 9400 2450 50  0001 C CNN
+	1    9400 2450
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9400 2450 9400 2750
+Text Notes 1550 6350 0    100  ~ 0
+Auxiliary electric heater\nEnergy meter pulses\n\n12 V alternative (not used)
+$Comp
+L Device:R R7
+U 1 1 5F45C29C
+P 4400 6900
+F 0 "R7" H 4470 6946 50  0000 L CNN
+F 1 "4.7k" H 4470 6855 50  0000 L CNN
+F 2 "" V 4330 6900 50  0001 C CNN
+F 3 "~" H 4400 6900 50  0001 C CNN
+	1    4400 6900
+	1    0    0    -1  
+$EndComp
+Text GLabel 4000 6150 0    50   Input ~ 0
+SO+
+Text GLabel 4000 6300 0    50   Input ~ 0
+SO-
+Wire Wire Line
+	4000 6300 4400 6300
+$Comp
+L power:GND #PWR027
+U 1 1 5F45C2AC
+P 4400 7150
+F 0 "#PWR027" H 4400 6900 50  0001 C CNN
+F 1 "GND" H 4405 6977 50  0000 C CNN
+F 2 "" H 4400 7150 50  0001 C CNN
+F 3 "" H 4400 7150 50  0001 C CNN
+	1    4400 7150
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4400 7050 4400 7150
+Wire Wire Line
+	4000 6150 4400 6150
+Wire Wire Line
+	4400 6150 4400 6050
+Wire Notes Line
+	1500 750  1500 1950
+Wire Notes Line
+	1500 1950 7450 1950
+Wire Notes Line
+	7450 1950 7450 750 
+Wire Notes Line
+	7450 750  1500 750 
+Wire Wire Line
+	7300 3350 8650 3350
+Wire Wire Line
+	7300 1100 7300 3350
+Wire Wire Line
+	8300 3450 7200 3450
+Wire Wire Line
+	7200 1600 6400 1600
+Connection ~ 8300 3450
+Wire Wire Line
+	7200 3450 7200 1600
+Wire Wire Line
+	6900 3550 7950 3550
+Connection ~ 6900 3550
+Connection ~ 7950 3550
+Wire Wire Line
+	7600 3650 4450 3650
+Connection ~ 7600 3650
+Connection ~ 4450 3650
+Wire Wire Line
+	7600 3750 7600 4800
+Wire Wire Line
+	7600 4800 4400 4800
+Connection ~ 4400 4800
+$Comp
+L power:+12V #PWR026
+U 1 1 5F5072B0
+P 4400 6050
+F 0 "#PWR026" H 4400 5900 50  0001 C CNN
+F 1 "+12V" H 4415 6223 50  0000 C CNN
+F 2 "" H 4400 6050 50  0001 C CNN
+F 3 "" H 4400 6050 50  0001 C CNN
+	1    4400 6050
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R6
+U 1 1 5F50BDA9
+P 4400 6500
+F 0 "R6" H 4470 6546 50  0000 L CNN
+F 1 "6.8k" H 4470 6455 50  0000 L CNN
+F 2 "" V 4330 6500 50  0001 C CNN
+F 3 "~" H 4400 6500 50  0001 C CNN
+	1    4400 6500
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4400 6300 4400 6350
+Text Label 4650 6700 0    50   ~ 0
+ARDUINO_INPUT
+Wire Wire Line
+	4400 6650 4400 6700
+Wire Wire Line
+	4400 6700 5250 6700
+Connection ~ 4400 6700
+Wire Wire Line
+	4400 6700 4400 6750
+Wire Notes Line
+	1500 5700 5350 5700
+Wire Notes Line
+	5350 5700 5350 7400
+Wire Notes Line
+	5350 7400 1500 7400
+Wire Notes Line
+	1500 7400 1500 5700
+Text Notes 1550 4800 0    100  ~ 0
+Auxiliary electric heater\nEnergy meter pulses\nOrno WE-520
+$EndSCHEMATC

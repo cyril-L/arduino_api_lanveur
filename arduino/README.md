@@ -1,9 +1,26 @@
 # Arduino
 
-## TODOs
+[Schéma des branchements](./lanveur_schematics/lanveur_schematics.pdf).
 
-- Changement de capteur de température
-- Schematics
+## Capteurs
+
+### Sondes de température DS18B20
+
+TODO Changement de capteur de température
+
+### Compteur électrique triphasé Orno WE-520
+
+Un compteur est utilisé pour mesurer l’énergie consommée par le chauffage d’appoint, une résistance de 3 kW en triphasé.
+
+La notice du compteur spécifie la sortie impulsion suivante :
+
+- Tension : 12~17V
+- Courant : 27 mA
+- Longueur de câble maximale : 20 m
+- Durée d’impulsion : 80 ms
+- Fréquence : 800 impulsions par kWh
+
+Bien qu’une sortie 5 V semble hors spécification, elle fonctionne. Nous avons choisi cette solution pour simplifier le montage. L’alternative 12 V est également proposée sur le [schéma](./lanveur_schematics/lanveur_schematics.pdf).
 
 ## Flasher le code Arduino depuis le Raspberry Pi
 
