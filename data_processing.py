@@ -88,7 +88,9 @@ class DataProcessing():
         Returns:
             Labeled dict of raw values.
         """
-        return dict(zip(RAW_DATA_LABELS, data))
+        data = dict(zip(RAW_DATA_LABELS, data))
+        data['timestamp'] = int(time.time())
+        return data
 
     def update_persistent_counters(self, data):
         """Remembers persistent pulses counters, updates data in place.
