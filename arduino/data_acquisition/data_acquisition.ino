@@ -1,3 +1,6 @@
+// Copyright 2020 Cyril Lugan, https://cyril.lugan.fr
+// Licensed under the EUPL v1.2, https://eupl.eu/1.2/en/
+
 #include "OneWire.h"
 
 // Pin assignment
@@ -179,18 +182,18 @@ void oneWireScan(OneWire * bus) {
       bus->reset_search();
       break;
     }
-    
+
     Serial.print(F("Found "));
     for(byte i = 0; i < 8; ++i) {
       if (address[i] < 0x10) Serial.write('0');
       Serial.print(address[i], HEX);
       Serial.write(' ');
     }
-  
+
     if (OneWire::crc8(address, 7) != address[7]) {
         Serial.print(F("(CRC invalid)"));
     }
   }
-  
+
   Serial.println();
 }

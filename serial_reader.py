@@ -1,4 +1,33 @@
 #!/usr/bin/env python3
+#
+# Copyright 2020 Cyril Lugan.
+# Licensed under the EUPL v1.2 (see https://eupl.eu/1.2/en/)
+# ==============================================================================
+"""Parses data from the Arduino, streamed on a serial port.
+
+Reads rows of values form the Arduino on the serial port,
+exposes them as lists of unlabeled values,
+handles parsing errors, reconnection and Arduino reset.
+
+Reads: b'10570 ; 5285 ; 225 ; 52.37 ; 47.02 ; 43.94 ; 37.66 ; 18.15 ; 48.62 ; 47.08 ; \r\n'
+Exposes: [10570, 5285, 225, 52.37, 47.02, 43.94, 37.66, 18.15, 48.62, 47.08]
+
+Typical usage example:
+
+    def callback(data):
+        print(data)
+
+    serial_reader = BackgroundSerialReader(callback)
+    serial_reader.start()
+
+Run directly for unit tests:
+
+    python serial_reader.py --unit-test
+
+Run directly to test connection with the Arduino
+
+    python serial_reader.py --arduino
+"""
 
 import logging
 import threading
@@ -28,6 +57,13 @@ class SerialReader():
 
     @staticmethod
     def parse_data_line(line):
+        """
+        Args:
+            line: utf-8 encoded row of 10 values from the Arduino, separated by semicolons.
+
+        Returns:
+            A parsed list of values, None if parsing failed.
+        """
         try:
             # converts bytes to string
             line = line.decode("utf-8")
@@ -52,14 +88,18 @@ class SerialReader():
             return None
 
     def reset_arduino(self):
+        """Outputs serial control signals used to reset the Arduino."""
         logging.warning("Reseting Arduino")
-        # Reset Arduino
         self.ioserial.setDTR(False)
         time.sleep(1)
         self.ioserial.flushInput()
         self.ioserial.setDTR(True)
 
 class BackgroundSerialReader():
+    """Runs SerialReader in a thread, reconnect automatically on errors and timeout.
+
+    As it recon
+    """
 
     def __init__(self, on_data_callback,
                  serial_device=SERIAL_DEVICE,
@@ -118,13 +158,10 @@ class BackgroundSerialReader():
                              timeout=self.fresh_data_timeout_duration)
 
     def has_timedout(self):
-        return self.get_time() > self.fresh_data_timeout
+        return time.monotonic() > self.fresh_data_timeout
 
     def reset_timeout(self):
-        self.fresh_data_timeout = self.get_time() + self.fresh_data_timeout_duration
-
-    def get_time(self):
-        return time.monotonic()
+        self.fresh_data_timeout = time.monotonic() + self.fresh_data_timeout_duration
 
 if __name__ == '__main__':
 
@@ -186,22 +223,6 @@ if __name__ == '__main__':
             with self.assertLogs(level='ERROR'):
                 with self.assertRaises(TimeoutError):
                     reader.read_data_line()
-
-    class TestBackgroundSerialReader(unittest.TestCase):
-
-        def test_handles_timeout(self):
-            # TODO
-            pass
-
-        def test_handles_arduino_not_connected(self):
-            # TODO
-            # Retry until up again
-            # Keep counting ticks
-            pass
-
-        def test_handles_serial_error(self):
-            # TODO
-            pass
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-t", "--unit-test",
