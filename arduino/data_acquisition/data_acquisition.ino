@@ -17,12 +17,14 @@ const byte ONEWIRE_BUS_2_PIN = 5;
 OneWire onewire_bus1(ONEWIRE_BUS_1_PIN);
 OneWire onewire_bus2(ONEWIRE_BUS_2_PIN);
 
+// List sensors to be read on each bus
+// Addresses found with oneWireScan(), can be accessed from the host
+// by sending Enter on the serial port.
+
 typedef struct DS18B20_t {
   const byte address[8];
   OneWire *bus;
 } DS18B20_t;
-
-// Sensors found with oneWireScan
 
 const byte temp_sensors_count = 7;
 
@@ -37,10 +39,18 @@ DS18B20_t temp_sensors[temp_sensors_count] {
     {{0x28, 0xFF, 0x72, 0x45, 0x90, 0x15, 0x04, 0x9D}, &onewire_bus2}
 };
 
+// Arduini Uno has 2 digital pins that can be used as Interrupt input
+// As we need more, this class is used to poll those inputs
+// update() must be called at least twice as fast as the minimal input duration to
+// prevent misses.
+
 class DebouncedPluseCounter {
 public:
 
   volatile unsigned long count;
+
+  // digital_pin: pin to be use, will be setup and read by this class.
+  // debounce_duration_ms: a state change shorter than this duration will be ignored.
 
   DebouncedPluseCounter(int digital_pin, int debounce_duration_ms) {
     this->digital_pin = digital_pin;
@@ -118,11 +128,24 @@ void setup() {
 
 void loop() {
 
+  // Scan OneWire bus when receiving Enter
+  while (Serial.available() > 0) {
+    int c = Serial.read();
+    if (c == 13) {
+      Serial.println("Scanning OneWire bus 1");
+      oneWireScan(&onewire_bus1);
+      Serial.println("Scanning OneWire bus 2");
+      oneWireScan(&onewire_bus2);
+    }
+  }
+
+  // Send pulse counters
   for (int i = 0; i < pulse_counters_count; ++i) {
     Serial.print(pulse_counters[i].count);
     Serial.print(" ; ");
   }
 
+  // Measure and send temperatures
   for (int i = 0; i < temp_sensors_count; ++i) {
     float t = getTempC(&temp_sensors[i]);
     Serial.print(t);
@@ -193,7 +216,6 @@ void oneWireScan(OneWire * bus) {
     if (OneWire::crc8(address, 7) != address[7]) {
         Serial.print(F("(CRC invalid)"));
     }
+    Serial.println();
   }
-
-  Serial.println();
 }
