@@ -1,4 +1,16 @@
 #!/usr/bin/env python3
+#
+# Copyright 2020 Cyril Lugan, https://cyril.lugan.fr
+# Licensed under the EUPL v1.2, https://eupl.eu/1.2/en/
+# ==============================================================================
+"""Exposes values of interest as a JSON object over HTTP.
+
+Those values are intended to be consumed by a Zabbix agent.
+Mainly boiler plate code to process data from read from serial port.
+
+Usage:
+    python3 main.py
+"""
 
 import threading
 import time
@@ -12,6 +24,7 @@ from data_processing import DataProcessing, PersistentCounters
 app = Flask(__name__)
 
 class Pipeline():
+    """Launches the serial reader in a background thread, processes incoming data."""
 
     def __init__(self):
         self.counters = PersistentCounters(COUNTERS_FILE_PATH)
@@ -25,6 +38,7 @@ class Pipeline():
         self.lock = threading.Lock()
 
     def on_new_data(self, data):
+        """Called on each new data from the serial reader in a background thread."""
         data = self.data_processing.process(data)
         with self.lock:
             self.latest_data = data
@@ -35,6 +49,10 @@ class Pipeline():
             self.save_counters_at = now + COUNTERS_FILE_SAVE_PERIOD_MIN * 60
 
     def get_latest_data(self):
+        """
+        Returns:
+            Latest data if available, None if no new data have been received since last call
+        """
         with self.lock:
             data = self.latest_data
             self.latest_data = None

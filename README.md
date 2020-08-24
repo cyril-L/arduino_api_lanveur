@@ -6,19 +6,28 @@ L’objectif est ici de faire remonter vers ce système les données mesurées s
 
 ![Schema installation eau chaude solaire](./docs/schema_installation_lanveur.svg)
 
-L’installation pour le datalogging est composée des éléments suivants :
+## Architecture
 
-- Un Arduino connecté à des sondes de température et des compteurs à impulsions (eau et électricité).
-- Un Raspberry Pi, connecté en USB à l’Arduino récupère ces données et les expose
-- Une clé 3G pour faire remonter les données.
+Un Arduino lit les données des capteurs et les envoie sur l’interface série (par USB), sans traitement.
 
-## Installation
+- [Montage et installation l’Arduino](./arduino/README.md)
+- [Code Arduino](./arduino/data_acquisition/data_acquisition.ino)
 
-Ces instructions permettent d’installer le programme sur un Raspberry Pi fraîchement réinstallé. Voir ici pour [repgrogrammer l’Arduino](./arduino/README.md).
+Un Raspberry Pi récupère et traite ces données avec un script Python :
+
+- [serial_reader.py](./serial_reader.py) lit et vérifie les données brutes
+- [data_processing.py](./data_processing.py) traite les données brutes
+- [main.py](./main.py) expose ces données en HTTP
+
+Un agent Zabbix, également sur le Raspberry Pi, accède aux données exposées en HTTP pour les faire remonter au système de monitoring. Une clé 3G est utilisée pour la connexion Internet.
+
+## Installer sur un Raspberry Pi
+
+Ces instructions permettent d’installer le programme sur un Raspberry Pi fraîchement réinstallé. Voir ici pour [reprogrammer l’Arduino](./arduino/README.md).
 
 **TODO zabbix agent**
 
-Récupération du code à la racine du répertoire personnel :
+Récupérer le code à la racine du répertoire personnel :
 
 ```
 sudo apt install git
@@ -26,13 +35,13 @@ cd $HOME
 git clone https://github.com/cyril-L/arduino_api_lanveur.git
 ```
 
-Installation des dépendances Python :
+Installer les dépendances Python :
 
 ```
 sudo apt-get install python3-serial python3-flask
 ```
 
-Execution des tests unitaires :
+Executer les tests unitaires :
 
 ```
 $ cd $HOME/arduino_api_lanveur/
@@ -50,19 +59,13 @@ Ran 9 tests in 0.007s
 OK
 ```
 
-Lancement manuel du programme :
+Lancer manuellement :
 
 ```
 python3 main.py
 ```
 
-Lancement automatique du programme avec un Service systemd :
-
-```
-mkdir -p $HOME/.config/systemd/user/
-```
-
-Éditer le fichier $HOME/.config/systemd/user/arduino_api.service
+Pour lancer automatiquement avec un service systemd, éditer le fichier $HOME/.config/systemd/user/arduino_api.service :
 
 ```
 [Unit]

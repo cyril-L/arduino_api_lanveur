@@ -1,14 +1,11 @@
-# Acquisition de température, volume d’eau et d’énergie électriques
+# Arduino
 
-## TODO
+## TODOs
 
-Changement de capteur de température
+- Changement de capteur de température
+- Schematics
 
-Changement de compteur électrique
-
-Changement de compteur d’Eau
-
-## Flashage du code Arduino depuis le Raspberry Pi
+## Flasher le code Arduino depuis le Raspberry Pi
 
 ```
 cd $HOME/arduino_api_lanveur/arduino
@@ -33,14 +30,14 @@ $ ./arduino-cli core install arduino:avr
 ./arduino-cli upload -p /dev/ttyACM0 --fqbn arduino:avr:uno data_acquisition
 ```
 
-## Lecture des données sur le port série
+## Lire les données sur le port série
 
 ```
 sudo apt-get install picocom
 picocom -b 9600 /dev/ttyACM0
 ```
 
-## Sauvegarde et restauration du programme original
+## Sauvegarder et restaurer le programme original
 
 Procédure utilisée pour sauvegarde le programme original tournant sur l’Arduino (nous n’avions pas les sources).
 

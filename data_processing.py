@@ -1,27 +1,63 @@
 #!/usr/bin/env python3
+#
+# Copyright 2020 Cyril Lugan, https://cyril.lugan.fr
+# Licensed under the EUPL v1.2, https://eupl.eu/1.2/en/
+# ==============================================================================
+"""Makes human readable values of interest from a raw data line.
+
+Reads: [0, 1, 0, 52.37, 47.02, 43.94, 37.66, 18.15, 16, 15]
+Exposes: {
+    'Vecs_pulses': 0, …,
+    'Teh': 52.37, …,
+    'Epst': 0.001161, # kWh
+    …
+}
+
+Typical usage example:
+
+    persistent_counters = PersistentCounters("counters.json")
+    self.data_processing = DataProcessing(persistent_counters)
+    serial_reader = BackgroundSerialReader(self.callback)
+    serial_reader.start()
+
+    def callback(self, raw_data):
+        print(self.data_processing.process(raw_data))
+
+Run directly for unit tests:
+
+    python data_processing.py
+"""
 
 import os
 import json
-from energy_modeling import model_water_energy
-import config
 import time
 
+from energy_modeling import model_water_energy
+import config
+
+# Hard coded labels corresponding to a raw Arduino values
 RAW_DATA_LABELS = [
-    'Vecs_pulses',
-    'Vep_pulses',
-    'Eax_pulses',
-    'Teh', # Haut du ballon
-    'Teb', # Bas du ballon
-    'Tec', # Eau chaude
-    'Tef', # Eau froide
-    'Tep', # Température des panneaux
-    'Txe', # Entrée échangeur
-    'Txs', # Sortie échangeur
+    'Vecs_pulses', # Used water meter pulses "volume eau chaude sanitaire"
+    'Vep_pulses', # Solar system water meter pulses "volume eau panneaux"
+    'Eax_pulses', # Auxiliary eletrical heater meter pulses "énergie auxiliaire"
+    'Teh', # Stored water top temperature "température eau haut"
+    'Teb', # Stored water top temperature "température eau bas"
+    'Tec', # Hot water output temperature "température eau chaude"
+    'Tef', # Cold water input temperature "température eau froide"
+    'Tep', # Temperature insde panels "température eau panneaux"
+    'Txe', # Exchanger input temperature "température exchanger entrée"
+    'Txs', # Exchanger output temperature "température exchanger sortie"
 ]
 
 class DataProcessing():
+    """Label and process values for raw Arduino list"""
 
     def __init__(self, counters, time_provider=time.monotonic):
+        """
+        Args:
+            time_provider: Monotonically increasing time function in seconds.
+                           Intended to be overriten in unit tests.
+        """
         self.counters = counters
         self.prev_counters = {}
 
@@ -32,38 +68,40 @@ class DataProcessing():
         self.prev_time = None
 
     def process(self, data):
+        """
+        Args:
+            data: Ordered list of unlabeled raw values parsed from the Arduino.
+        """
+        data = self.label_data(data)
 
-        data = dict(zip(RAW_DATA_LABELS, data))
+        self.update_persistent_counters(data)
+        self.compute_energies(data)
+        self.format_values(data)
 
-        current_time = self.time_provider() # s
+        return data
 
-        volume_solar = data['Vep_pulses'] / config.SOLAR_WATER_METER_TICKS_PER_L / 1000 # m³
-        volume_used = data['Vecs_pulses'] / config.USED_WATER_METER_TICKS_PER_L / 1000 # m³
+    def label_data(self, data):
+        """
+        Args:
+            data: Ordered list of unlabeled raw values parsed from the Arduino.
 
-        if self.prev_volume_solar is not None and volume_solar > self.prev_volume_solar:
-            volume_diff = volume_solar - self.prev_volume_solar
-            energy_diff = model_water_energy(volume_diff, data['Txe'], data['Txs'])
-            self.counters.update('Epst', energy_diff) # J
-            if energy_diff < 0:
-                self.counters.update('Esd', -energy_diff) # J
-                if self.prev_time is not None:
-                    duration = current_time - self.prev_time
-                    self.counters.update('Hsd', duration) # s
+        Returns:
+            Labeled dict of raw values.
+        """
+        return dict(zip(RAW_DATA_LABELS, data))
 
-        if self.prev_volume_used is not None and volume_used > self.prev_volume_used:
-            volume_diff = volume_used - self.prev_volume_used
-            energy_diff = model_water_energy(volume_diff, data['Tec'], data['Tef'])
-            self.counters.update('E', energy_diff) # J
+    def update_persistent_counters(self, data):
+        """Remembers persistent pulses counters, updates data in place.
 
-        self.prev_volume_solar = volume_solar
-        self.prev_volume_used = volume_used
-
-        # Handle counter resets
+        Args:
+            data: Labeled dict of raw values.
+        """
 
         counted = ['Vecs_pulses', 'Vep_pulses', 'Eax_pulses']
         have_counters_been_reset = False
 
         for label in counted:
+            # Assume a decreasing counter means the Arduino has been reset
             if not label in self.prev_counters or data[label] < self.prev_counters[label]:
                 have_counters_been_reset = True
                 break
@@ -73,11 +111,63 @@ class DataProcessing():
             if not have_counters_been_reset:
                 diff = data[label] - self.prev_counters.get(label, 0)
                 self.counters.update(label, diff)
+            else:
+                # For now we ingore pulses counted by the Arduino when not reading it.
+                # ie. if we connect to the Arduino, and its count is already x, we
+                # do not increate persistent counters by x, we start counting from there.
+                pass
             data[label] = self.counters.get(label)
             self.prev_counters[label] = curr
 
-        data['Vecs'] = data['Vecs_pulses'] # l
-        data['Vep'] = data['Vep_pulses'] # l
+    def compute_energies(self, data):
+        """Adds energy computations in the given data, using SI units.
+
+        Args:
+            data: Labeled dict of raw values.
+        """
+
+        current_time = self.time_provider() # s
+
+        volume_solar = data['Vep_pulses'] / config.SOLAR_WATER_METER_TICKS_PER_L / 1000 # m³
+        volume_used = data['Vecs_pulses'] / config.USED_WATER_METER_TICKS_PER_L / 1000 # m³
+
+        # Computes solar energy when circulating volume changes
+        # A deacresing volume can be seen on Arduino resets
+
+        if self.prev_volume_solar is not None and volume_solar > self.prev_volume_solar:
+            volume_diff = volume_solar - self.prev_volume_solar
+            energy_diff = model_water_energy(volume_diff, data['Txe'] - data['Txs'])
+            self.counters.update('Epst', energy_diff) # J
+
+            # Count separately when the solar system takes heat from the stored temperature,
+            # usually to cool the pannels
+
+            if energy_diff < 0:
+                self.counters.update('Esd', -energy_diff) # J
+                if self.prev_time is not None:
+                    duration = current_time - self.prev_time
+                    self.counters.update('Hsd', duration) # s
+
+        # Computes used water energy when used volume changes
+        # A deacresing volume can be seen on Arduino resets
+
+        if self.prev_volume_used is not None and volume_used > self.prev_volume_used:
+            volume_diff = volume_used - self.prev_volume_used
+            energy_diff = model_water_energy(volume_diff, data['Tec'] - data['Tef'])
+            self.counters.update('E', energy_diff) # J
+
+        self.prev_volume_solar = volume_solar
+        self.prev_volume_used = volume_used
+        self.prev_time = current_time
+
+    def format_values(self, data):
+        """Convert to human readable units for the upstream interface.
+
+        Args:
+            data: Labeled dict of values, modified in place.
+        """
+        data['Vecs'] = data['Vecs_pulses'] / config.SOLAR_WATER_METER_TICKS_PER_L # l
+        data['Vep'] = data['Vep_pulses'] / config.USED_WATER_METER_TICKS_PER_L # l
 
         # Auxiliary electric heater energy
         data['Eax'] = data['Eax_pulses'] / config.AUX_ENERGY_METER_TICKS_PER_KWH # kWh
@@ -94,39 +184,47 @@ class DataProcessing():
         # Useful solar productivity
         data['Ps'] = data['Esu'] / config.SOLAR_PANNEL_AREA # kWh / m²
 
-        # Esd
+        # Energy dissipated in the solar panels
         data['Esd'] = self.counters.get('Esd') / 3600 / 1000 # kWh
 
-        # Hsd
+        # Duration of energy dissipation with the solar panels
         data['Hsd'] = self.counters.get('Hsd') / 3600 # h
 
-        self.prev_time = current_time
-
-        return data
-
 class PersistentCounters():
+    """Keeps track of multiple persistent values by saving them to disk in a json file"""
 
-    def __init__(self, filepath=None):
+    def __init__(self, filepath):
         self.filepath = filepath
         if filepath is not None and os.path.isfile(filepath):
             with open(filepath, 'r') as file:
                 self.values = json.load(file)
         else:
+            # This is just supposed to happen in unit tests
             self.values = {}
 
     def save(self):
+        """Save values to in a json file"""
+
+        if self.filepath is None:
+            raise AttributeError('No file has been provided')
         with open(self.filepath, 'w') as file:
             file.write(json.dumps(self.values, indent=2))
 
     def update(self, name, diff):
+        """Updates a persistent value by adding the given diff"""
+
         prev_value = self.values.get(name, 0)
         curr_value = prev_value + diff
         self.values[name] = curr_value
 
     def get(self, name):
+        """Returns a persistent value"""
+
         return self.values.get(name, 0)
 
     def reset(self, name, value):
+        """Resets a value to the given value"""
+
         self.values[name] = value
 
 if __name__ == '__main__':
@@ -137,13 +235,15 @@ if __name__ == '__main__':
     class TestDataProcessing(unittest.TestCase):
 
         def setUp(self):
-            self.counters = PersistentCounters()
+            """Setup objects to be used before each test"""
+            self.counters = PersistentCounters(None)
             self.processing = DataProcessing(self.counters, self.get_mocked_time)
             self.mocked_data = [0, 0, 0,
                                 52.37, 47.02, 43.94, 37.66, 18.15, 48.62, 47.08]
             self.mocked_time = 0
 
         def set_mocked_data(self, label, value):
+            """Simulate data sent from the Arduino"""
             for i, mocked_data_label in enumerate(RAW_DATA_LABELS):
                 if label == mocked_data_label:
                     self.mocked_data[i] = value
@@ -151,6 +251,7 @@ if __name__ == '__main__':
             raise ValueError
 
         def set_mocked_time(self, value_s):
+            """Simulate time"""
             self.mocked_time = value_s
 
         def get_mocked_time(self):
@@ -176,7 +277,7 @@ if __name__ == '__main__':
         def test_increases_counters_on_first_data(self):
 
             # Let say some persitent counter have been set
-            self.counters = PersistentCounters()
+            self.counters = PersistentCounters(None)
             self.counters.reset('Vecs_pulses', 100)
 
             # The arduino is already running, counting ticks
@@ -186,11 +287,12 @@ if __name__ == '__main__':
             self.processing = DataProcessing(self.counters)
             self.processing.process(self.mocked_data)
 
-            # For now we do not increase persistent counters when not connected
-            # TODO this behavior might change
-            # A temporary counter have to be saved too to allow counting when not connected
+            # For now, increasing persistent counters when not connected
+            # is not supported
 
             self.assertEqual(self.counters.get('Vecs_pulses'), 100)
+
+            # Only ticks happening after the connection are counted
 
             self.set_mocked_data('Vecs_pulses', 3)
             self.processing.process(self.mocked_data)
@@ -278,14 +380,17 @@ if __name__ == '__main__':
             data = self.processing.process(self.mocked_data)
             self.assertEqual(0, data['Esd'])
 
-            # Decreasing 1 kg of water of a K
+            # Decreasing 1 kg of water of a K in one min
             self.set_mocked_data('Vep_pulses', 1)
+            self.set_mocked_time(60)
 
             data = self.processing.process(self.mocked_data)
 
             # Energy is counted and positive
             self.assertGreater(data['Esd'], 0)
+            self.assertAlmostEqual(cp, data['Esd'] * 1000 * 3600)
 
-# TODO used energy positive
+            # Time between consecutive values is used to compute dissipation time
+            self.assertEqual(data['Hsd'], 1 / 60)
 
     unittest.main()
