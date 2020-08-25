@@ -26,7 +26,7 @@ Un agent Zabbix, également sur le Raspberry Pi, accède aux données exposées 
 - [zabbix_to_csv.py](./zabbix_to_csv.py) récupère les données Zabbix en CSV
 - [plot_error.py](./plot_error.py) calcule et affiche l’erreur sur l’energie
 
-Les dépendances pour ces scripts sonts listées dans [requirements.txt](./requirements.txt). Pour les installer dans un environnement virtuel :
+Ces scripts ne sont pas nécessaires pour faire remonter les données depuis le Raspberry Pi. Ils peuvent être exécutés sur n’importe quel ordinateur avec Python. Les dépendances sonts listées dans [requirements.txt](./requirements.txt). Pour les installer dans un environnement virtuel :
 
 ```
 python3 -m venv lanveur-py3
@@ -41,9 +41,18 @@ Récupérer et afficher les données :
 ./plot_error.py 2020-08-25.csv
 ```
 
+![Graphique erreur énergie](./docs/plot_error.png)
+
+- `E_added` représente l’énergie totale ayant dû être apportée pour provoquer le changement de température observé sur l’eau stockée
+- `E_solar_added`, `E_aux_added`,  `E_consumed` représentent les énergies mesurées, ayant été apportées ou soustraites au ballon
+- `E_cooling` est une estimation de l’énergie perdue par refroidissement (la température extérieure n’étant pas connue)
+- `E_error` montre l’énergie manquant pour équilibrer l’équation
+
+Sur cet exemple en particulier, l’énergie soutirée correspond à l’évolution de température observée, mais l’énergie solaire semble sous-estimée. Une énergie plus importante aurait dû être apportée pour provoquer le changement de température observé.
+
 ## Installer sur un Raspberry Pi
 
-Ces instructions permettent d’installer le programme sur un Raspberry Pi fraîchement réinstallé. Voir ici pour [reprogrammer l’Arduino](./arduino/README.md).
+Ces instructions permettent d’installer le programme permettant de faire remonter les données depuis un Raspberry Pi fraîchement installé (Raspberry Pi OS / Debian), connecté à l’Arduino en USB. Voir ici pour [reprogrammer l’Arduino](./arduino/README.md).
 
 **TODO zabbix agent**
 
