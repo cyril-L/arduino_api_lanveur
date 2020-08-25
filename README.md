@@ -23,8 +23,8 @@ Un agent Zabbix, également sur le Raspberry Pi, accède aux données exposées 
 
 ## Vérification des données
 
-- [zabbix_to_csv.py](./zabbix_to_csv.py) récupère les données Zabbix en CSV
-- [plot_error.py](./plot_error.py) calcule et affiche l’erreur sur l’energie
+- [zabbix_to_csv.py](./zabbix_to_csv.py) récupère en CSV les données remontées Zabbix
+- [plot_error.py](./plot_error.py) calcule et affiche l’erreur sur les energies mesurées
 
 Ces scripts ne sont pas nécessaires pour faire remonter les données depuis le Raspberry Pi. Ils peuvent être exécutés sur n’importe quel ordinateur avec Python. Les dépendances sonts listées dans [requirements.txt](./requirements.txt). Pour les installer dans un environnement virtuel :
 
