@@ -21,6 +21,26 @@ Un Raspberry Pi récupère et traite ces données avec un script Python :
 
 Un agent Zabbix, également sur le Raspberry Pi, accède aux données exposées en HTTP pour les faire remonter au système de monitoring. Une clé 3G est utilisée pour la connexion Internet.
 
+## Vérification des données
+
+- [zabbix_to_csv.py](./zabbix_to_csv.py) récupère les données Zabbix en CSV
+- [plot_error.py](./plot_error.py) calcule et affiche l’erreur sur l’energie
+
+Les dépendances pour ces scripts sonts listées dans [requirements.txt](./requirements.txt). Pour les installer dans un environnement virtuel :
+
+```
+python3 -m venv lanveur-py3
+source lanveur-py3/bin/activate
+pip install -r requirements.txt
+```
+
+Récupérer et afficher les données :
+
+```
+./zabbix_to_csv.py 2020-08-25 > 2020-08-25.csv
+./plot_error.py 2020-08-25.csv
+```
+
 ## Installer sur un Raspberry Pi
 
 Ces instructions permettent d’installer le programme sur un Raspberry Pi fraîchement réinstallé. Voir ici pour [reprogrammer l’Arduino](./arduino/README.md).
