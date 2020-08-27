@@ -4,6 +4,9 @@ Ce programme s’intègre dans le système de datalogging de bâtiments de la vi
 
 L’objectif est ici de faire remonter vers ce système les données mesurées sur une installation de production d’eau chaude sanitaire solaire, avec un appoint électrique.
 
+- [Affichage pour le monitoring de l’installation et l’exploitation des données](https://zabbix.empower-lorient.fr/zabbix.php?action=dashboard.view&dashboardid=12)
+- [Affichage pour le debug](https://zabbix.empower-lorient.fr/zabbix.php?action=dashboard.view&dashboardid=10)
+
 ![Schema installation eau chaude solaire](./docs/schema_installation_lanveur.svg)
 
 ## Architecture
